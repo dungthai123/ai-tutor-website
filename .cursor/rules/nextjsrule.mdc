@@ -1,0 +1,258 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Next.js 15 + Tailwind CSS + TypeScript Cursor Rules
+
+## Project Structure & Architecture
+- Follow the modular monolith pattern with feature-based modules
+- Use App Router with co-located routes in `app/(routes)/`
+- Organize features in `modules/[feature-name]/` with clear separation
+- Keep shared utilities in `shared/` and server logic in `lib/`
+- Use TypeScript strictly throughout the project
+
+## File Organization Rules
+- Place feature-specific code in `modules/[feature-name]/`
+- Use barrel exports (index.ts) for clean imports
+- Co-locate related files (components, hooks, types) within feature modules
+- Keep global components in `shared/components/`
+- Server-side logic goes in `lib/`
+
+## Component Guidelines
+- Use React Server Components by default
+- Add 'use client' directive only when necessary (hooks, event handlers, browser APIs)
+- Prefer function declarations over arrow functions for components
+- Use TypeScript interfaces for props, not types
+- Always define prop interfaces, even for simple components
+
+```tsx
+// Good
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+}
+
+export function Button({ children, variant = 'primary', onClick }: ButtonProps) {
+  return (
+    <button 
+      className={cn(
+        'px-4 py-2 rounded-md font-medium',
+        variant === 'primary' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
+      )}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+## Tailwind CSS Best Practices
+- Use Tailwind utility classes exclusively - avoid custom CSS unless absolutely necessary
+- Prefer semantic class grouping: layout → spacing → typography → colors → effects
+- Use `cn()` utility (clsx + tailwind-merge) for conditional classes
+- Create component variants using object mapping pattern
+- Use Tailwind's responsive prefixes: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+- Leverage Tailwind's design tokens for consistency
+
+```tsx
+// Class ordering example
+className={cn(
+  // Layout
+  'flex items-center justify-between',
+  // Spacing
+  'px-4 py-2 mb-4',
+  // Typography
+  'text-sm font-medium',
+  // Colors
+  'bg-white text-gray-900',
+  // Effects
+  'shadow-sm hover:shadow-md',
+  // Responsive
+  'sm:px-6 md:text-base'
+)}
+```
+
+## Import Organization
+- Group imports: React → Next.js → External libraries → Internal modules → Relative imports
+- Use absolute imports with path mapping
+- Prefer named imports over default imports for utilities
+
+```tsx
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { clsx } from 'clsx';
+import { Button } from '@/shared/components/ui/button';
+import { useFeature } from '../hooks/use-feature';
+import './component.css';
+```
+
+## Hooks & State Management
+- Create custom hooks for reusable logic in feature `hooks/` directories
+- Use React's built-in state management (useState, useReducer, useContext)
+- Prefix custom hooks with 'use'
+- Keep hooks pure and focused on single responsibilities
+- Use proper dependency arrays in useEffect
+
+```tsx
+// Custom hook example
+export function useFeatureData(id: string) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchFeatureData(id)
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  return { data, loading, error };
+}
+```
+
+## API & Data Fetching
+- Use Next.js App Router patterns (Server Actions, Route Handlers)
+- Place API clients in `lib/api/`
+- Use proper error handling and loading states
+- Implement proper TypeScript types for API responses
+- Use Server Actions for mutations, fetch for queries in Server Components
+
+```tsx
+// Server Action example
+'use server';
+
+export async function createFeature(formData: FormData) {
+  try {
+    const data = await api.features.create({
+      name: formData.get('name') as string,
+    });
+    revalidatePath('/features');
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: 'Failed to create feature' };
+  }
+}
+```
+
+## Styling Conventions
+- Use descriptive Tailwind classes, avoid arbitrary values unless necessary
+- Create reusable style patterns in shared components
+- Use CSS variables for complex color schemes
+- Maintain consistent spacing scale (4, 8, 12, 16, 24, 32, 48, 64)
+- Use semantic color names in Tailwind config
+
+## Error Handling
+- Always handle loading and error states in components
+- Use error boundaries for unexpected errors
+- Provide meaningful error messages to users
+- Log errors appropriately for debugging
+
+```tsx
+if (loading) return <Spinner />;
+if (error) return <ErrorMessage message={error.message} />;
+if (!data) return <EmptyState />;
+```
+
+## Performance Guidelines
+- Use React.memo() for expensive components
+- Implement proper code splitting with dynamic imports
+- Optimize images with Next.js Image component
+- Use Suspense boundaries for better UX
+- Minimize 'use client' usage to maximize SSR benefits
+
+## TypeScript Rules
+- Use strict TypeScript configuration
+- Define interfaces for all data structures
+- Use proper typing for event handlers
+- Avoid `any` type - use `unknown` if needed
+- Use generic types for reusable components
+
+```tsx
+interface GenericListProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  keyExtractor: (item: T) => string;
+}
+
+export function GenericList<T>({ items, renderItem, keyExtractor }: GenericListProps<T>) {
+  return (
+    <div className="space-y-2">
+      {items.map((item) => (
+        <div key={keyExtractor(item)}>
+          {renderItem(item)}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Testing Considerations
+- Write components that are easy to test
+- Use data-testid attributes for testing selectors
+- Keep business logic in custom hooks for easier testing
+- Mock external dependencies properly
+
+## Accessibility
+- Use semantic HTML elements
+- Include proper ARIA attributes
+- Ensure keyboard navigation works
+- Maintain proper color contrast ratios
+- Use Tailwind's focus states consistently
+
+## Code Quality
+- Use ESLint and Prettier configuration
+- Follow consistent naming conventions (camelCase for variables, PascalCase for components)
+- Write self-documenting code with clear variable names
+- Add JSDoc comments for complex functions
+- Keep functions small and focused on single responsibilities
+
+## Environment & Configuration
+- Use proper environment variables with validation
+- Type environment variables in `env.d.ts`
+- Keep sensitive data in environment variables
+- Use different configs for development/production
+
+## Common Patterns to Follow
+1. **Feature Module Structure:**
+   ```
+   modules/auth/
+   ├── components/
+   │   ├── login-form.tsx
+   │   └── index.ts
+   ├── hooks/
+   │   ├── use-auth.ts
+   │   └── index.ts
+   ├── services/
+   │   ├── auth-api.ts
+   │   └── index.ts
+   ├── types/
+   │   └── index.ts
+   └── constants.ts
+   ```
+
+2. **Component Export Pattern:**
+   ```tsx
+   // components/index.ts
+   export { LoginForm } from './login-form';
+   export { SignupForm } from './signup-form';
+   ```
+
+3. **Consistent Error Handling:**
+   ```tsx
+   const [state, setState] = useState<{
+     data: T | null;
+     loading: boolean;
+     error: string | null;
+   }>({
+     data: null,
+     loading: true,
+     error: null,
+   });
+   ```
+
+Remember: Prioritize readability, maintainability, and type safety. When in doubt, favor explicit code over clever solutions.
