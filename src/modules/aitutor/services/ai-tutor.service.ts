@@ -10,6 +10,18 @@ export interface TutorResponse {
   error?: string;
 }
 
+export interface TranslationRequest {
+  text: string;
+  targetLanguage?: string;
+  sourceLanguage?: string;
+}
+
+export interface TranslationResponse {
+  translation: string;
+  success: boolean;
+  error?: string;
+}
+
 export class AITutorService {
   static async getFeedback(
     studentInput: string,
@@ -55,8 +67,34 @@ export class AITutorService {
       throw new Error('Failed to check grammar');
     }
   }
+
+  static async translateMessage(
+    text: string,
+    targetLanguage: string = 'english',
+    sourceLanguage?: string
+  ): Promise<string> {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLanguage, sourceLanguage }),
+      });
+
+      const data: TranslationResponse = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to translate message');
+      }
+
+      return data.translation;
+    } catch (error) {
+      console.error('Translation Error:', error);
+      throw new Error('Failed to translate message');
+    }
+  }
 }
 
 // Export convenience functions
 export const getTutorFeedback = AITutorService.getFeedback;
-export const checkGrammar = AITutorService.checkGrammar; 
+export const checkGrammar = AITutorService.checkGrammar;
+export const translateMessage = AITutorService.translateMessage; 

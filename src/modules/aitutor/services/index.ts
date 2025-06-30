@@ -1,5 +1,8 @@
 import { Category, Topic } from '../types';
 
+// Export AI Tutor services
+export * from './ai-tutor.service';
+
 export class TopicService {
   private static async fetchWithFallback(primaryUrl: string, fallbackUrl: string) {
     try {

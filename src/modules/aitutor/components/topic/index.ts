@@ -1,5 +1,4 @@
 // Topic Selection & Management Components
-export { TopicDetailsPanel } from './TopicDetailsPanel';
 export { TopicSelectionPanel } from './TopicSelectionPanel';
 export { TopicSelector } from './TopicSelector';
 export { CategoryGrid } from './CategoryGrid';

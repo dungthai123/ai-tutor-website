@@ -27,12 +27,17 @@ export const useTopicSelector = (
     }
   }, [state.selectedCategory]);
 
-  // Auto-select category if provided
+  // Auto-select category if provided, or select first category
   useEffect(() => {
-    if (selectedCategoryId && state.categories.length > 0 && !state.selectedCategory) {
-      const category = state.categories.find(cat => cat.id === selectedCategoryId);
-      if (category) {
-        handleCategorySelect(category);
+    if (state.categories.length > 0 && !state.selectedCategory) {
+      if (selectedCategoryId) {
+        const category = state.categories.find(cat => cat.id === selectedCategoryId);
+        if (category) {
+          handleCategorySelect(category);
+        }
+      } else {
+        // Auto-select first category if none is provided
+        handleCategorySelect(state.categories[0]);
       }
     }
   }, [selectedCategoryId, state.categories, state.selectedCategory]);

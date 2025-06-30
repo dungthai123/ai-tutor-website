@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSidebarState } from '../../hooks/useSidebarState';
 
 interface SidebarItem {
   id: string;
@@ -28,14 +29,16 @@ const sidebarItems: SidebarItem[] = [
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, isHydrated, toggleSidebar } = useSidebarState();
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  // Determine sidebar width and transition behavior
+  const sidebarWidth = isCollapsed ? 'w-20' : 'w-64';
+  
+  // Only add transition after hydration to prevent flash on navigation
+  const transitionClass = isHydrated ? 'transition-all duration-300' : '';
 
   return (
-    <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-background-primary border-r border-border-subtle h-[calc(100vh-6rem)] flex flex-col mt-6 ml-6 rounded-xl transition-all duration-300`}>
+    <aside className={`${sidebarWidth} bg-background-primary border-r border-border-subtle h-[calc(100vh-6rem)] flex flex-col mt-6 ml-6 rounded-xl ${transitionClass}`}>
       <div className="py-4">
         {/* Logo/Brand and Toggle Button */}
         <div className="px-6 mb-8 flex items-center justify-between">

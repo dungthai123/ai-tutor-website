@@ -6,7 +6,6 @@ import { cn } from '@/utils/helpers';
 
 export function PracticeCard({ 
   practiceType, 
-  topicCount, 
   selectedLevel,
   className 
 }: PracticeCardProps) {
@@ -26,18 +25,6 @@ export function PracticeCard({
         <p className="text-text-secondary mb-6">
           {info.description}
         </p>
-        <div className="space-y-3 mb-6">
-          {info.features.map((feature: string, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-text-secondary">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              {feature}
-            </div>
-          ))}
-          <div className="flex items-center gap-2 text-sm text-text-secondary">
-            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-            {topicCount} available tests
-          </div>
-        </div>
         <Link href={`/practice/${practiceType}?level=${selectedLevel}`}>
           <Button className={cn('w-full', info.color, info.hoverColor)}>
             Start {info.title}

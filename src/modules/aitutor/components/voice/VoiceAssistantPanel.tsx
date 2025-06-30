@@ -25,51 +25,59 @@ export function VoiceAssistantPanel({
   );
 
   // Render based on state type
-  switch (stateType) {
-    case 'empty':
-    case 'error':
-      return emptyStateConfig ? (
-        <EmptyState {...emptyStateConfig} />
-      ) : null;
+  const renderContent = () => {
+    switch (stateType) {
+      case 'empty':
+      case 'error':
+        return emptyStateConfig ? (
+          <EmptyState {...emptyStateConfig} />
+        ) : null;
 
-    case 'connecting':
-      return selectedTopic ? (
-        <ConnectingState selectedTopic={selectedTopic} />
-      ) : null;
+      case 'connecting':
+        return selectedTopic ? (
+          <ConnectingState selectedTopic={selectedTopic} />
+        ) : null;
 
-    case 'connected':
-      return selectedTopic && token ? (
-        <ConnectedSession
-          selectedTopic={selectedTopic}
-          userName={userName}
-          token={token}
+      case 'connected':
+        return selectedTopic && token ? (
+          <ConnectedSession
+            selectedTopic={selectedTopic}
+            userName={userName}
+            token={token}
             onStartCall={onStartCall} 
-          onDisconnect={onDisconnect}
-          onToggleFullScreen={onToggleFullScreen}
-        />
-      ) : null;
+            onDisconnect={onDisconnect}
+            onToggleFullScreen={onToggleFullScreen}
+          />
+        ) : null;
 
-    case 'disconnected':
-      // Topic selected but not connected - show VoiceAssistant for call flow
-      return selectedTopic ? (
-      <VoiceAssistant 
-        selectedTopic={selectedTopic} 
-        onStartCall={onStartCall}
-        onDeclineCall={onDeclineCall}
-        isConnecting={isConnecting}
-      />
-      ) : null;
+      case 'disconnected':
+        // Topic selected but not connected - show VoiceAssistant for call flow
+        return selectedTopic ? (
+          <VoiceAssistant 
+            selectedTopic={selectedTopic} 
+            onStartCall={onStartCall}
+            onDeclineCall={onDeclineCall}
+            isConnecting={isConnecting}
+          />
+        ) : null;
 
-    default:
-      // Fallback to empty state
+      default:
+        // Fallback to empty state
+        return (
+          <EmptyState
+            title="AI English Tutor"
+            message="Chọn một chủ đề từ danh sách bên trái để bắt đầu luyện tập"
+            icon="🤖"
+          />
+        );
+    }
+  };
+
   return (
-        <EmptyState
-          title="AI English Tutor"
-          message="Chọn một chủ đề từ danh sách bên trái để bắt đầu luyện tập"
-          icon="🤖"
-        />
+    <div className="h-full flex flex-col overflow-hidden">
+      {renderContent()}
+    </div>
   );
-  }
 }
 
 export default VoiceAssistantPanel; 

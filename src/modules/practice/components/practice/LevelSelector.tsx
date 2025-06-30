@@ -26,18 +26,9 @@ export function LevelSelector({
                 : 'border-gray-200 hover:border-gray-300'
             )}
           >
-            <div className={cn(
-              'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg mb-3 mx-auto',
-              hskLevel.color
-            )}>
-              {hskLevel.level.slice(-1)}
-            </div>
             <h3 className="font-semibold text-text-primary mb-1">
               {hskLevel.name}
             </h3>
-            <p className="text-sm text-text-secondary">
-              {hskLevel.description}
-            </p>
           </button>
         ))}
       </div>

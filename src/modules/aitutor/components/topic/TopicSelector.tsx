@@ -44,11 +44,6 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
     return <LoadingSpinner message="Loading..." />;
   }
 
-  // Show loading during topic fetch
-  if (loading && categories.length > 0) {
-    return <LoadingSpinner message="Đang tải chủ đề..." />;
-  }
-
   // Show error state
   if (error) {
     return <ErrorMessage error={error} onRetry={loadCategories} />;
@@ -70,6 +65,7 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
           selectedTopic={selectedTopic}
           selectedCategory={selectedCategory}
           onTopicSelect={handleInternalTopicSelect}
+          loading={loading && categories.length > 0}
         />
       )}
     </div>

@@ -6,8 +6,7 @@ import { MainLayout } from '@/shared/components/layout/MainLayout';
 import { 
   FullScreenLayout,
   TopicSelectionPanel,
-  VoiceAssistantPanel,
-  TopicDetailsPanel
+  VoiceAssistantPanel
 } from '@/modules/aitutor/components';
 import { SelectedTopic } from '@/modules/aitutor/types';
 
@@ -27,32 +26,28 @@ export default function PracticePage() {
     tasks: string[];
     imageUrl?: string;
   }) => {
-    // If we're currently connected, disconnect first
-    if (token) {
-      console.log('🔄 Disconnecting current session before selecting new topic');
-      handleDisconnect();
-      
-      // Wait a bit before selecting new topic to allow cleanup
-      setTimeout(() => {
-        const topic = {
-          categoryId,
-          topicId,
-          ...topicData
-        };
-        
-        setSelectedTopic(topic);
-        console.log('✅ Topic selected:', topic.topicName);
-      }, 200);
-    } else {
-      // No active connection, select immediately
     const topic = {
       categoryId,
       topicId,
       ...topicData
     };
-    
-    setSelectedTopic(topic);
-      console.log('✅ Topic selected:', topic.topicName);
+
+    // If we're currently connected, disconnect first
+    if (token) {
+      console.log('🔄 Disconnecting current session before selecting new topic');
+      
+      // First clear the token to trigger disconnection
+      setToken(null);
+      
+      // Wait for proper cleanup before selecting new topic
+      setTimeout(() => {
+        setSelectedTopic(topic);
+        console.log('✅ Topic selected after disconnect:', topic.topicName);
+      }, 500);
+    } else {
+      // No active connection, select immediately
+      setSelectedTopic(topic);
+      console.log('✅ Topic selected immediately:', topic.topicName);
     }
   };
 
@@ -122,15 +117,18 @@ export default function PracticePage() {
 
   const handleDisconnect = () => {
     console.log('🔄 Disconnecting...');
+    
     // First, exit full screen mode
     setIsFullScreen(false);
     
-    // Then clear the token after a small delay to allow cleanup
+    // Clear token immediately to trigger LiveKit disconnection
+    setToken(null);
+    
+    // Clear selected topic after a small delay to allow proper cleanup
     setTimeout(() => {
-      setToken(null);
       setSelectedTopic(null);
       console.log('✅ Disconnection complete');
-    }, 100);
+    }, 300);
   };
 
   const handleDeclineCall = () => {
@@ -171,17 +169,19 @@ export default function PracticePage() {
       <MainLayout showFloatingActions={false}>
         <div className="min-h-screen bg-background-secondary">
           <div className="w-full py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-6rem)]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-6rem)]">
               
-              {/* Left Column - Topic Selection (1 unit) */}
-              <TopicSelectionPanel
-                userName={userName}
-                onUserNameChange={setUserName}
-                onTopicSelect={handleTopicSelect}
-              />
+              {/* Left Column - Topic Selection (2/3 width) */}
+              <div className="lg:col-span-2 h-full overflow-hidden">
+                <TopicSelectionPanel
+                  userName={userName}
+                  onUserNameChange={setUserName}
+                  onTopicSelect={handleTopicSelect}
+                />
+              </div>
 
-              {/* Middle Column - Voice Assistant (2 units) */}
-              <div className="lg:col-span-2 bg-background-card rounded-xl border border-border-subtle overflow-hidden">
+              {/* Right Column - Voice Assistant (1/3 width) */}
+              <div className="lg:col-span-1 h-full bg-background-card rounded-xl border border-border-subtle overflow-hidden">
                 <VoiceAssistantPanel
                   selectedTopic={selectedTopic}
                   userName={userName}
@@ -191,14 +191,6 @@ export default function PracticePage() {
                   onDeclineCall={handleDeclineCall}
                   onDisconnect={handleDisconnect}
                   onToggleFullScreen={() => setIsFullScreen(true)}
-                />
-              </div>
-
-              {/* Right Column - Topic Details (1 unit) */}
-              <div className="lg:col-span-1 bg-background-card rounded-xl border border-border-subtle p-4 overflow-y-auto">
-                <TopicDetailsPanel
-                  selectedTopic={selectedTopic}
-                  isConnected={!!token}
                 />
               </div>
             </div>

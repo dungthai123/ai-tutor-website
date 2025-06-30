@@ -27,6 +27,7 @@ function createChatMessageFromTranscription(
   room: RoomContext | null,
   isAgent: boolean = false
 ): ReceivedChatMessage {
+  console.log('transcription', transcription);
   return {
     id: transcription.id || `transcription-${Date.now()}-${Math.random()}`,
     message: transcription.text || '',

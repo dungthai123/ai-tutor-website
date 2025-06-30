@@ -4,8 +4,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
 import NoSSR from '@/shared/components/common/NoSSR';
-import { PhoneChatPanel } from '../voice/PhoneChatPanel';
-import { VoiceAssistant } from '../voice/VoiceAssistant';
+import { FloatingChatButton, ChatWindow } from '@/modules/chatbot';
+import { PhoneChatPanel, VoiceAssistant } from '../voice';
 import { SelectedTopic } from '../../types';
 
 interface FullScreenLayoutProps {
@@ -23,6 +23,21 @@ export const FullScreenLayout: React.FC<FullScreenLayoutProps> = ({
   onMinimize,
   onEndSession
 }) => {
+  // Handle session end with error handling
+  const handleEndSession = React.useCallback(() => {
+    console.log('🔄 FullScreenLayout - handleEndSession called');
+    try {
+      onEndSession();
+    } catch (error) {
+      console.error('Error ending session:', error);
+    }
+  }, [onEndSession]);
+
+  // Don't render if token is missing
+  if (!token || !selectedTopic) {
+    return null;
+  }
+
   return (
     <NoSSR>
       <div className="fixed inset-0 bg-background-primary z-50 overflow-hidden">
@@ -37,16 +52,20 @@ export const FullScreenLayout: React.FC<FullScreenLayoutProps> = ({
             selectedTopic={selectedTopic}
             userName={userName}
             onMinimize={onMinimize}
-            onEndSession={onEndSession}
+            onEndSession={handleEndSession}
           >
             <LiveKitRoom
               key={`${token}-${selectedTopic.topicId}`} // Force remount when token or topic changes
               serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7880'}
               token={token}
-              connect={!!token}
+              connect={!!token && !!selectedTopic}
               video={false}
               audio={true}
-              onDisconnected={onEndSession}
+              onDisconnected={handleEndSession}
+              onError={(error) => {
+                console.error('FullScreen LiveKit connection error:', error);
+                // Don't call onEndSession on connection errors to avoid recursive calls
+              }}
               className="flex-1"
             >
               <RoomAudioRenderer />
@@ -60,6 +79,10 @@ export const FullScreenLayout: React.FC<FullScreenLayoutProps> = ({
             </LiveKitRoom>
           </PhoneChatPanel>
         </motion.div>
+        
+        {/* Floating Chatbot Components */}
+        <ChatWindow />
+        <FloatingChatButton />
       </div>
     </NoSSR>
   );

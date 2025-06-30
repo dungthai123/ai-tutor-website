@@ -54,7 +54,6 @@ export function PhoneCallScreen({
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <p className="text-gray-300 text-lg mb-2">Incoming Practice Session</p>
           <h2 className="text-3xl font-bold text-white mb-2">AI English Tutor</h2>
           <p className="text-primary-green text-lg font-medium">
             {selectedTopic.topicName}

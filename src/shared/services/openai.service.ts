@@ -71,6 +71,19 @@ export const OPENAI_CONFIGS = {
     - Alternative phrasings
     
     Focus on accuracy and clarity.`
+  },
+  
+  TRANSLATOR: {
+    model: 'gpt-4o-mini',
+    maxTokens: 300,
+    temperature: 0.3,
+    systemPrompt: `You are a professional translator. Provide accurate translations with:
+    - Clear, natural translations
+    - Cultural context when needed
+    - Maintain the tone and meaning of the original text
+    - Only return the translation, no additional commentary unless specifically requested
+    
+    Focus on accuracy and natural language flow.`
   }
 } as const;
 
@@ -171,6 +184,24 @@ export class OpenAIService {
 
     return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.GRAMMAR_CHECKER);
   }
+
+  /**
+   * Translation function
+   */
+  static async translateText(
+    text: string,
+    targetLanguage: string = 'Chinese',
+    sourceLanguage?: string
+  ): Promise<string> {
+    const sourceInfo = sourceLanguage ? `from ${sourceLanguage} ` : '';
+    const prompt = `Translate the following text ${sourceInfo}to ${targetLanguage}: "${text}"`;
+    
+    const messages: ChatMessage[] = [
+      { role: 'user', content: prompt }
+    ];
+
+    return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.TRANSLATOR);
+  }
 }
 
 // Export individual functions for convenience
@@ -179,5 +210,6 @@ export const {
   tutorResponse,
   provideFeedback,
   checkGrammar,
+  translateText,
   createChatCompletion
 } = OpenAIService; 

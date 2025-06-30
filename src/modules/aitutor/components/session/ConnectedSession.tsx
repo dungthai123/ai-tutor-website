@@ -22,13 +22,28 @@ export function ConnectedSession({
   onDisconnect,
   onToggleFullScreen
 }: ConnectedSessionProps) {
+  // Handle disconnection with error handling
+  const handleDisconnect = React.useCallback(() => {
+    console.log('🔄 ConnectedSession - handleDisconnect called');
+    try {
+      onDisconnect();
+    } catch (error) {
+      console.error('Error during disconnection:', error);
+    }
+  }, [onDisconnect]);
+
+  // Don't render if token is missing
+  if (!token || !selectedTopic) {
+    return null;
+  }
+
   return (
     <div className="h-full">
       <SessionHeader
         selectedTopic={selectedTopic}
         userName={userName}
         onToggleFullScreen={onToggleFullScreen}
-        onDisconnect={onDisconnect}
+        onDisconnect={handleDisconnect}
       />
       
       <LiveKitRoom
@@ -38,7 +53,11 @@ export function ConnectedSession({
         connect={!!token && !!selectedTopic}
         video={false}
         audio={true}
-        onDisconnected={onDisconnect}
+        onDisconnected={handleDisconnect}
+        onError={(error) => {
+          console.error('LiveKit connection error:', error);
+          // Don't call onDisconnect on connection errors to avoid recursive calls
+        }}
         className="h-[calc(100%-5rem)]"
       >
         <RoomAudioRenderer />

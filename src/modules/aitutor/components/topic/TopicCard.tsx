@@ -18,7 +18,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
 
   return (
     <div
-      className={`bg-background-card rounded-lg border-2 overflow-hidden cursor-pointer transition-all duration-200 ${
+      className={`bg-background-card rounded-lg border-2 overflow-hidden cursor-pointer transition-all duration-200 animate-in fade-in-0 slide-in-from-bottom-4 ${
         isSelected
           ? 'border-accent-primary shadow-glow'
           : 'border-border-subtle hover:border-accent-primary hover:bg-background-hover'
@@ -26,7 +26,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
       onClick={() => onSelect(topic)}
     >
       {topic.image_url && (
-        <div className="relative h-24 bg-background-tertiary overflow-hidden">
+        <div className="relative h-56 bg-background-tertiary overflow-hidden">
           <Image 
             src={getImageUrl(topic.image_url)}
             alt={topic.title}

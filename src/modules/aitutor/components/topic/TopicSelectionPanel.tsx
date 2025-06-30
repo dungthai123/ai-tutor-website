@@ -26,13 +26,11 @@ interface TopicSelectionPanelProps {
 }
 
 export const TopicSelectionPanel: React.FC<TopicSelectionPanelProps> = ({
-  userName,
-  onUserNameChange,
   onTopicSelect
 }) => {
   return (
-    <div className="lg:col-span-1 bg-background-card rounded-xl border border-border-subtle p-4 overflow-y-auto">
-      <div className="mb-4">
+    <div className="h-full bg-background-card rounded-xl border border-border-subtle p-4 overflow-y-auto flex flex-col">
+      <div className="mb-4 flex-shrink-0">
         <h2 className="text-lg font-bold text-text-primary mb-1">
           🎯 Chọn chủ đề
         </h2>
@@ -40,22 +38,11 @@ export const TopicSelectionPanel: React.FC<TopicSelectionPanelProps> = ({
           Chọn chủ đề luyện tập
         </p>
         
-        {/* User Name Input */}
-        <div className="mt-3">
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Tên của bạn
-          </label>
-          <input
-            type="text"
-            placeholder="Nhập tên"
-            value={userName}
-            onChange={(e) => onUserNameChange(e.target.value)}
-            className="search-input w-full text-xs"
-          />
-        </div>
       </div>
       
-      <TopicSelector onTopicSelect={onTopicSelect} />
+      <div className="flex-1 overflow-y-auto">
+        <TopicSelector onTopicSelect={onTopicSelect} />
+      </div>
     </div>
   );
 };

@@ -6,10 +6,10 @@ import { AnimatePresence } from "framer-motion";
 import { AgentTile } from './AgentTile';
 import { ChatMessageView } from './ChatMessageView';
 import { ChatEntry } from './ChatEntry';
-import { PhoneCallScreen } from './PhoneCallScreen';
+import { PhoneCallScreen } from '../voice/PhoneCallScreen';
 import { ChatEmptyState } from './ChatEmptyState';
 import { ControlBar } from './ControlBar';
-import { ConnectingState } from './ConnectingState';
+import { ConnectingState } from '../voice/ConnectingState';
 import { useChatAndTranscription } from '@/modules/aitutor/hooks/useChatAndTranscription';
 import { VoiceAssistantProps } from '../../types';
 
