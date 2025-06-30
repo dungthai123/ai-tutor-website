@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PracticeType, QuizModel } from '../types';
-import { PracticeApiService } from '@/lib/api/practice';
+import { PracticeApiService } from '../services';
 
 interface TestScore {
   correct: number;

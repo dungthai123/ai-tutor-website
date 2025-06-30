@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, KeyboardEvent, useRef, useCallback } from 'react';
+import { useState, KeyboardEvent, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/utils/helpers';
 
 interface ChatInputProps {
@@ -18,17 +18,30 @@ export function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const sendingRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea based on message content
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [message]);
 
   const handleSend = useCallback(() => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage && !isLoading && !sendingRef.current) {
-      sendingRef.current = true;
-      onSendMessage(trimmedMessage);
-      setMessage('');
-      setTimeout(() => {
-        sendingRef.current = false;
-      }, 500);
-    }
+    if (isLoading || sendingRef.current) return;
+
+    const trimmed = message.trim();
+    if (!trimmed) return;
+
+    sendingRef.current = true;
+    onSendMessage(trimmed);
+
+    /* 👇 runs *after* any late onChange fired by the same Enter press */
+    setTimeout(() => setMessage(''), 0);
+
+    textareaRef.current?.focus();
+    setTimeout(() => (sendingRef.current = false), 500);
   }, [message, isLoading, onSendMessage]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -42,13 +55,19 @@ export function ChatInput({
     <div className={cn('flex items-end gap-2 p-3 border-t border-gray-200 dark:border-gray-700', className)}>
       {/* Message input */}
       <div className="flex-1">
-        <textarea
+        <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+          <textarea
+          ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isLoading}
           rows={1}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           className={cn(
             // Layout
             'w-full resize-none',
@@ -70,12 +89,8 @@ export function ChatInput({
             height: 'auto',
             overflowY: message.length > 100 ? 'auto' : 'hidden'
           }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
-          }}
         />
+        </form>
       </div>
 
       {/* Send button */}

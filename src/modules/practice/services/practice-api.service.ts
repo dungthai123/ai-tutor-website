@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from '@/lib/api/client';
 import { 
   HSKLevel, 
   PracticeType,
@@ -8,7 +8,7 @@ import {
   TestResult,
   OptionModel,
   TypeAnswer
-} from '@/modules/practice/types';
+} from '../types';
 
 // API Response interfaces
 interface ApiHSKTestResponse {
@@ -63,8 +63,14 @@ interface ApiQuizQuestion {
   };
 }
 
+/**
+ * API Service for Practice Module
+ * Handles all external API calls for practice-related data
+ */
 export class PracticeApiService {
-  // Get HSK tests by level
+  /**
+   * Get HSK tests by level
+   */
   static async getHSKTestsByLevel(level: HSKLevel): Promise<PracticeTopicModel[]> {
     try {
       const response = await apiClient.get<ApiHSKTestResponse>(`/api/v1/hsk-tests/level/${level}`);
@@ -80,12 +86,12 @@ export class PracticeApiService {
       response.data.data.forEach(test => {
         // Add listening test if it has listening questions
         if (test.total_listening_questions > 0) {
-          transformedTests.push(PracticeApiService.transformHSKTest(test, PracticeType.LISTENING));
+          transformedTests.push(this.transformHSKTest(test, PracticeType.LISTENING));
         }
         
         // Add reading test if it has reading questions
         if (test.total_reading_questions > 0) {
-          transformedTests.push(PracticeApiService.transformHSKTest(test, PracticeType.READING));
+          transformedTests.push(this.transformHSKTest(test, PracticeType.READING));
         }
       });
 
@@ -96,7 +102,9 @@ export class PracticeApiService {
     }
   }
 
-  // Get listening questions for a test
+  /**
+   * Get listening questions for a test
+   */
   static async getListeningQuestions(testId: string): Promise<ListeningQuizModel[]> {
     try {
       const response = await apiClient.get<{ success: boolean; data: ApiQuizQuestion[] }>(
@@ -108,14 +116,16 @@ export class PracticeApiService {
         return [];
       }
 
-      return response.data.map((question) => PracticeApiService.transformListeningQuizModel(question));
+      return response.data.map((question) => this.transformListeningQuizModel(question));
     } catch (error) {
       console.error('Failed to fetch listening questions:', error);
       throw new Error('Failed to load listening questions. Please try again.');
     }
   }
 
-  // Get reading questions for a test  
+  /**
+   * Get reading questions for a test  
+   */
   static async getReadingQuestions(testId: string): Promise<ReadingQuizModel[]> {
     try {
       const response = await apiClient.get<{ success: boolean; data: ApiQuizQuestion[] }>(
@@ -127,14 +137,16 @@ export class PracticeApiService {
         return [];
       }
 
-      return response.data.map((question) => PracticeApiService.transformReadingQuizModel(question));
+      return response.data.map((question) => this.transformReadingQuizModel(question));
     } catch (error) {
       console.error('Failed to fetch reading questions:', error);
       throw new Error('Failed to load reading questions. Please try again.');
     }
   }
 
-  // Submit test results (optional - implement if backend supports it)
+  /**
+   * Submit test results (optional - implement if backend supports it)
+   */
   static async submitTestResult(result: TestResult): Promise<void> {
     try {
       await apiClient.post('/api/v1/practice/results', result);
@@ -144,7 +156,9 @@ export class PracticeApiService {
     }
   }
 
-  // Get test history (optional - implement if backend supports it)
+  /**
+   * Get test history (optional - implement if backend supports it)
+   */
   static async getTestHistory(level: HSKLevel, type: PracticeType): Promise<TestResult[]> {
     try {
       const response = await apiClient.get<TestResult[]>(
@@ -157,7 +171,9 @@ export class PracticeApiService {
     }
   }
 
-  // Transform HSK test data
+  /**
+   * Transform HSK test data
+   */
   private static transformHSKTest(rawData: ApiHSKTest, type: PracticeType): PracticeTopicModel {
     const questionCount = type === PracticeType.LISTENING 
       ? rawData.total_listening_questions 
@@ -183,14 +199,16 @@ export class PracticeApiService {
     };
   }
 
-  // Transform raw API data to ListeningQuizModel
+  /**
+   * Transform raw API data to ListeningQuizModel
+   */
   private static transformListeningQuizModel(rawData: ApiQuizQuestion): ListeningQuizModel {
     return {
       id: rawData.id,
       question: rawData.question || '',
       correctAnswer: rawData.answer,
-      optionList: rawData.option_list.map(PracticeApiService.transformOptionModel),
-      typeAnswer: PracticeApiService.mapAnswerType(rawData.type_of_answer),
+      optionList: rawData.option_list.map(this.transformOptionModel),
+      typeAnswer: this.mapAnswerType(rawData.type_of_answer),
       explanation: rawData.localized_content?.explanation || undefined,
       readingTranslation: undefined, // Not available in current API
       correctAnswerTranslation: undefined, // Not available in current API
@@ -204,14 +222,16 @@ export class PracticeApiService {
     };
   }
 
-  // Transform raw API data to ReadingQuizModel
+  /**
+   * Transform raw API data to ReadingQuizModel
+   */
   private static transformReadingQuizModel(rawData: ApiQuizQuestion): ReadingQuizModel {
     return {
       id: rawData.id,
       question: rawData.question || '',
       correctAnswer: rawData.answer,
-      optionList: rawData.option_list.map(PracticeApiService.transformOptionModel),
-      typeAnswer: PracticeApiService.mapAnswerType(rawData.type_of_answer),
+      optionList: rawData.option_list.map(this.transformOptionModel),
+      typeAnswer: this.mapAnswerType(rawData.type_of_answer),
       explanation: rawData.localized_content?.explanation || undefined,
       readingTranslation: undefined, // Not available in current API
       correctAnswerTranslation: undefined, // Not available in current API
@@ -224,7 +244,9 @@ export class PracticeApiService {
     };
   }
 
-  // Transform answer option
+  /**
+   * Transform answer option
+   */
   private static transformOptionModel(option: { text: string; img_link?: string | null }, index: number): OptionModel {
     return {
       id: (index + 1).toString(),
@@ -233,7 +255,9 @@ export class PracticeApiService {
     };
   }
 
-  // Map API answer type to our enum - updated to fix runtime error
+  /**
+   * Map API answer type to our enum - updated to fix runtime error
+   */
   private static mapAnswerType(apiType: string): TypeAnswer {
     // Direct string mapping to avoid enum import issues
     const typeMap: Record<string, string> = {

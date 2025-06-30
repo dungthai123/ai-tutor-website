@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { HSKLevel, PracticeType, PracticeTopicModel } from '../types';
-import { PracticeApiService } from '@/lib/api/practice';
+import { PracticeApiService } from '../services';
 
 export function usePracticeTopics(practiceType: PracticeType, level: HSKLevel) {
   const [topics, setTopics] = useState<PracticeTopicModel[]>([]);

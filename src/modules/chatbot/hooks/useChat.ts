@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from 'react';
 import { useChatStore } from '../stores/useChatStore';
-import { ChatApiRequest, ChatApiResponse } from '../types';
+import { ChatApiRequest, ChatApiResponse, ChatMessage } from '../types';
 
 export function useChat() {
   const {
@@ -37,10 +37,20 @@ export function useChat() {
       setLoading(true);
       setError(null);
 
-      // Send API request
+      // Send API request with updated conversation history including the user message
+      const userMessage: ChatMessage = {
+        id: `temp_${Date.now()}`,
+        role: 'user',
+        content: messageKey,
+        timestamp: new Date()
+      };
+
       const requestBody: ChatApiRequest = {
         message: messageKey,
-        conversationHistory: currentMessages.slice(-10),
+        conversationHistory: [
+          ...currentMessages.slice(-9), // Keep last 9 messages
+          userMessage // Include current user message
+        ],
       };
 
       const response = await fetch('/api/chat', {
