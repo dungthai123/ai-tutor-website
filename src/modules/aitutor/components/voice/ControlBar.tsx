@@ -5,14 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceAssistantControlBar } from '@livekit/components-react';
 import { cn } from '@/utils/helpers';
 import { ChatInput } from './ChatInput';
-
-interface ControlBarProps {
-  chatOpen: boolean;
-  onChatToggle: () => void;
-  onSendMessage: (message: string) => void;
-  disabled?: boolean;
-  variant?: 'default' | 'compact';
-}
+import { ControlBarProps } from '../../types';
 
 export function ControlBar({ 
   chatOpen, 

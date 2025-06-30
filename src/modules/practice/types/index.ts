@@ -52,6 +52,7 @@ export interface ReadingQuizModel extends BaseQuizModel {
   passage?: string;
   questionType?: ReadingQuestionType;
   readingTranslationContext?: string;
+  imageUrl?: string; // Main question image
 }
 
 // Answer Options

@@ -4,7 +4,7 @@ import React from 'react';
 import { VoiceAssistantPanelProps } from '../../types';
 import { useVoiceAssistantPanel } from '../../hooks/useVoiceAssistantPanel';
 import { EmptyState } from '../ui/EmptyState';
-import { ConnectingState } from '../session/ConnectingState';
+import { ConnectingState } from './ConnectingState';
 import { ConnectedSession } from '../session/ConnectedSession';
 import { VoiceAssistant } from './VoiceAssistant';
 

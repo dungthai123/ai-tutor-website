@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { PracticeType } from '@/modules/practice/types';
-import { MainLayout } from '@/shared/components/layout/MainLayout';
 import { TestContainer } from '@/modules/practice/components';
 
 export default function TestPage() {
@@ -19,12 +18,12 @@ export default function TestPage() {
   };
 
   return (
-    <MainLayout>
+
       <TestContainer
         testType={testType}
         testId={testId}
         onBack={handleBack}
       />
-    </MainLayout>
+
   );
 } 

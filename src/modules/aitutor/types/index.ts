@@ -167,4 +167,5 @@ export interface ControlBarProps {
   onChatToggle: () => void;
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  variant?: 'default' | 'compact';
 } 

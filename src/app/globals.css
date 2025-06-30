@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 20px;
+  /* or 112.5% for responsive scaling */
+}
+
 :root {
   /* Background Colors */
   --bg-primary: #0a0a0a;

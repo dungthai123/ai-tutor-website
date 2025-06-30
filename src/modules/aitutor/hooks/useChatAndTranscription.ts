@@ -77,7 +77,7 @@ export function useChatAndTranscription() {
       // Add chat messages
       if (chat.chatMessages?.length) {
         allMessages.push(...chat.chatMessages);
-      }
+          }
 
       // Sort messages by timestamp
       return allMessages.sort((a, b) => a.timestamp - b.timestamp);

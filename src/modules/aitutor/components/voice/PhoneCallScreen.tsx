@@ -2,19 +2,18 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { SelectedTopic } from '../../types';
+import { PhoneCallScreenProps } from '../../types';
+import { getButtonClasses } from '../../utils';
 
-interface PhoneCallScreenProps {
-  selectedTopic: SelectedTopic;
-  onAccept: () => void;
-  onDecline: () => void;
-}
-
-export function PhoneCallScreen({ selectedTopic, onAccept, onDecline }: PhoneCallScreenProps) {
+export function PhoneCallScreen({ 
+  selectedTopic, 
+  onAccept, 
+  onDecline 
+}: PhoneCallScreenProps) {
   const [isRinging, setIsRinging] = useState(true);
 
-  const handleAcceptCall = () => {
-    console.log('📞 Accept button clicked!');
+  const handleAccept = () => {
+    console.log('📞 Accept button clicked');
     setIsRinging(false);
     setTimeout(() => {
       console.log('📞 Calling onAccept after timeout');
@@ -22,8 +21,8 @@ export function PhoneCallScreen({ selectedTopic, onAccept, onDecline }: PhoneCal
     }, 500);
   };
 
-  const handleDeclineCall = () => {
-    console.log('❌ Decline button clicked!');
+  const handleDecline = () => {
+    console.log('📞 Decline button clicked');
     onDecline();
   };
 
@@ -120,8 +119,8 @@ export function PhoneCallScreen({ selectedTopic, onAccept, onDecline }: PhoneCal
         <div className="flex items-center justify-center gap-12">
           {/* Decline Button */}
           <button
-            onClick={handleDeclineCall}
-            className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 cursor-pointer relative z-20"
+            onClick={handleDecline}
+            className={getButtonClasses('icon-error')}
             style={{ touchAction: 'manipulation' }}
           >
             <span className="text-2xl text-white pointer-events-none">📞</span>
@@ -129,8 +128,8 @@ export function PhoneCallScreen({ selectedTopic, onAccept, onDecline }: PhoneCal
 
           {/* Accept Button */}
           <button
-            onClick={handleAcceptCall}
-            className="w-20 h-20 bg-primary-green hover:bg-green-600 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 cursor-pointer relative z-20"
+            onClick={handleAccept}
+            className={getButtonClasses('icon-success')}
             style={{ touchAction: 'manipulation' }}
           >
             <span className="text-3xl text-white pointer-events-none">📞</span>

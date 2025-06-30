@@ -220,6 +220,7 @@ export class PracticeApiService {
       passage: rawData.context?.join('\n') || rawData.question || '',
       questionType: undefined, // Could be enhanced to detect question type
       readingTranslationContext: undefined, // Not available in current API
+      imageUrl: rawData.image_url || undefined, // Main question image
     };
   }
 
