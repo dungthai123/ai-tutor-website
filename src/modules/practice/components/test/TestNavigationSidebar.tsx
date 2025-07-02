@@ -26,17 +26,10 @@ export function TestNavigationSidebar({
   onShowSubmitModal
 }: TestNavigationSidebarProps) {
   return (
-    <div className="h-full bg-white border-l border-gray-200 flex flex-col">
+    <div className="h-full bg-white border-l border-gray-200 flex flex-col rounded-lg">
       {/* Navigation Header */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Test Navigation
-          </h3>
-          <div className="text-sm text-gray-500">
-            Time: 777:40
-          </div>
-        </div>
+
 
         {/* Progress Summary */}
         <div className="space-y-2">
@@ -94,21 +87,6 @@ export function TestNavigationSidebar({
             )}
           </Button>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-2 text-xs text-center mt-3">
-            <div className="p-2 bg-green-50 rounded">
-              <div className="font-medium text-green-700">{answeredCount}</div>
-              <div className="text-green-600">Answered</div>
-            </div>
-            <div className="p-2 bg-gray-50 rounded">
-              <div className="font-medium text-gray-700">{unansweredCount}</div>
-              <div className="text-gray-600">Remaining</div>
-            </div>
-            <div className="p-2 bg-blue-50 rounded">
-              <div className="font-medium text-blue-700">{progressPercentage}%</div>
-              <div className="text-blue-600">Complete</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

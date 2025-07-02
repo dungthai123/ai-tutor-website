@@ -44,6 +44,9 @@ export interface ListeningQuizModel extends BaseQuizModel {
   transcript?: string;
   transcriptContext?: string;
   readingTranslationContext?: string;
+  questionType?: ListeningQuestionType;
+  imageList?: string[];
+  imageUrl?: string; // Main question image for listening questions
 }
 
 // Reading Quiz Model (extends BaseQuizModel)  
@@ -53,6 +56,7 @@ export interface ReadingQuizModel extends BaseQuizModel {
   questionType?: ReadingQuestionType;
   readingTranslationContext?: string;
   imageUrl?: string; // Main question image
+  imageList?: string[]; // Context images for picture matching questions
 }
 
 // Answer Options
@@ -172,6 +176,30 @@ export enum QuizStats {
 export enum ReadingQuestionType {
   READ_ORDERING = 'Read_Ordering',
   READ_WRONG_SENTENCE = 'Read_MultipleChoice_WrongSentence',
+  READ_TRUE_FALSE = 'Read_TrueFalse',
+  READ_MATCH_PICTURE_WITH_STATEMENT = 'Read_Match_PictureWithStatement',
+  READ_MATCH_STATEMENT_WITH_STATEMENT = 'Read_Match_StatementWithStatement',
+  READ_MATCH_MISSING_WORD_WITH_STATEMENT = 'Read_Match_MissingWordWithStatement',
+  READ_MULTIPLE_CHOICE_SHORT_PASSAGE = 'Read_MultipleChoice_ShortPassage',
+  READ_MULTIPLE_CHOICE_LONG_PASSAGE = 'Read_MultipleChoice_LongPassage',
+  READ_MULTIPLE_CHOICE_STATEMENT = 'Read_MultipleChoice_Statement',
+  READ_MULTIPLE_CHOICE_PASSAGE = 'Read_MultipleChoice_Passage',
+  READ_MATCHING_MISSING_SENTENCE = 'Read_Matching_MissingSentence',
+  READ_MULTIPLE_CHOICE_MISSING_WORDS_SENTENCE = 'Read_MultipleChoice_MissingWords_sentence',
+  NORMAL = 'normal'
+}
+
+export enum ListeningQuestionType {
+  LISTEN_TRUE_FALSE = 'Listen_TrueFalse',
+  LISTEN_MATCH_PICTURE_WITH_AUDIO = 'Listen_Match_PictureWithAudio',
+  LISTEN_MULTIPLE_CHOICE_PICTURE = 'Listen_MultipleChoice_Picture',
+  LISTEN_MULTIPLE_CHOICE_STATEMENT = 'Listen_MultipleChoice_Statement',
+  LISTEN_MULTIPLE_CHOICE_SHORT_DIALOGUE = 'Listen_MultipleChoice_ShortDialogue',
+  LISTEN_MULTIPLE_CHOICE_MEDIUM_DIALOGUE = 'Listen_MultipleChoice_MediumDialogue',
+  LISTEN_MULTIPLE_CHOICE_DIALOGUE = 'Listen_MultipleChoice_Dialogue',
+  LISTEN_MULTIPLE_CHOICE_SHORT_PASSAGE = 'Listen_MultipleChoice_ShortPassage',
+  LISTEN_MULTIPLE_CHOICE_CONSISTENT_STATEMENT = 'Listen_MultipleChoice_ConsistentStatement',
+  LISTEN_MULTIPLE_CHOICE_INTERVIEW = 'Listen_MultipleChoice_Interview',
   NORMAL = 'normal'
 }
 

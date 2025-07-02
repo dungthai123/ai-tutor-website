@@ -38,8 +38,8 @@ export const Sidebar: React.FC = () => {
   const transitionClass = isHydrated ? 'transition-all duration-300' : '';
 
   return (
-    <aside className={`${sidebarWidth} bg-background-primary border-r border-border-subtle h-[calc(100vh-6rem)] flex flex-col mt-6 ml-6 rounded-xl ${transitionClass}`}>
-      <div className="py-4">
+    <aside className={`${sidebarWidth} bg-background-primary border-r border-border-subtle h-full flex flex-col overflow-hidden ${transitionClass}`}>
+      <div className="flex-1 py-4 overflow-y-auto">
         {/* Logo/Brand and Toggle Button */}
         <div className="px-6 mb-8 flex items-center justify-between">
           {!isCollapsed && (

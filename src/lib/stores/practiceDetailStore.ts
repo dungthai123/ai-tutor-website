@@ -10,6 +10,8 @@ import {
   TestScore
 } from '@/modules/practice/types';
 
+export type FontSize = 'small' | 'medium' | 'large';
+
 interface PracticeDetailState {
   // Test data
   topicModel: PracticeTopicModel | null;
@@ -33,6 +35,7 @@ interface PracticeDetailState {
   isAnswerSelected: boolean;
   isShowAnswerFeedback: boolean;
   isAnswerCorrect: boolean;
+  fontSize: FontSize;
   
   // Timer
   currentTime: number;
@@ -58,6 +61,7 @@ interface PracticeDetailState {
   toggleTranslation: () => void;
   toggleExplanation: () => void;
   toggleTranscript: () => void;
+  setFontSize: (size: FontSize) => void;
   startTimer: () => void;
   pauseTimer: () => void;
   updateTimer: () => void;
@@ -102,6 +106,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
       isAnswerSelected: false,
       isShowAnswerFeedback: false,
       isAnswerCorrect: false,
+      fontSize: 'small' as FontSize,
       
       currentTime: 0,
       totalTime: 1800,
@@ -145,6 +150,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
           isAnswerSelected: false,
           isShowAnswerFeedback: false,
           isAnswerCorrect: false,
+          fontSize: 'small' as FontSize,
           showAnswerAfterEach: options.showAnswerAfterEach ?? true,
           typeOfQuestion: options.typeOfQuestion,
           resume: options.resume ?? false,
@@ -271,6 +277,10 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
         }));
       },
       
+      setFontSize: (size: FontSize) => {
+        set({ fontSize: size });
+      },
+      
       startTimer: () => {
         set({ isTimerRunning: true });
       },
@@ -334,6 +344,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
           isAnswerSelected: false,
           isShowAnswerFeedback: false,
           isAnswerCorrect: false,
+          fontSize: 'small' as FontSize,
         });
       },
       

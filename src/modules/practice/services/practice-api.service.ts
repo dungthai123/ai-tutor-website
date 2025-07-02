@@ -7,7 +7,9 @@ import {
   ReadingQuizModel,
   TestResult,
   OptionModel,
-  TypeAnswer
+  TypeAnswer,
+  ReadingQuestionType,
+  ListeningQuestionType
 } from '../types';
 
 // API Response interfaces
@@ -61,6 +63,12 @@ interface ApiQuizQuestion {
     transcript?: string;
     explanation?: string | null;
   };
+  regions?: Record<string, {
+    reading_translation?: string;
+    context?: string;
+    explanation?: string;
+    transcript?: string;
+  }>;
 }
 
 /**
@@ -73,7 +81,9 @@ export class PracticeApiService {
    */
   static async getHSKTestsByLevel(level: HSKLevel): Promise<PracticeTopicModel[]> {
     try {
-      const response = await apiClient.get<ApiHSKTestResponse>(`/api/v1/hsk-tests/level/${level}`);
+      const response = await apiClient.get<ApiHSKTestResponse>(
+        `/api/v1/hsk-tests/level/${level}?page=1&per_page=100`
+      );
       
       if (!response.success || !response.data?.data || !Array.isArray(response.data.data)) {
         console.warn('Invalid API response format for HSK tests');
@@ -203,6 +213,11 @@ export class PracticeApiService {
    * Transform raw API data to ListeningQuizModel
    */
   private static transformListeningQuizModel(rawData: ApiQuizQuestion): ListeningQuizModel {
+    // Handle context images for word matching and picture selection questions
+    const imageList = rawData.context && Array.isArray(rawData.context) && rawData.context.length > 0 
+      ? rawData.context 
+      : undefined;
+
     return {
       id: rawData.id,
       question: rawData.question || '',
@@ -219,6 +234,9 @@ export class PracticeApiService {
       transcript: rawData.transcript,
       transcriptContext: rawData.transcript_context || undefined,
       readingTranslationContext: undefined, // Not available in current API
+      questionType: this.detectListeningQuestionType(rawData), // Enhanced question type detection
+      imageUrl: rawData.image_url || undefined, // Main question image for listening questions
+      imageList: imageList, // Context images for word matching questions
     };
   }
 
@@ -226,22 +244,127 @@ export class PracticeApiService {
    * Transform raw API data to ReadingQuizModel
    */
   private static transformReadingQuizModel(rawData: ApiQuizQuestion): ReadingQuizModel {
+    // Handle context data properly - could be images (strings) or text options (strings)
+    let passage: string | undefined = undefined;
+    let imageList: string[] | undefined = undefined;
+    
+    if (rawData.context && Array.isArray(rawData.context) && rawData.context.length > 0) {
+      // Check if context contains URLs (image links) or text
+      const isImageContext = rawData.context.some(item => 
+        typeof item === 'string' && (
+          item.includes('http') || 
+          item.includes('.jpg') || 
+          item.includes('.png') || 
+          item.includes('.jpeg')
+        )
+      );
+      
+      if (isImageContext) {
+        imageList = rawData.context;
+      } else {
+        // Context is text options or passage
+        passage = rawData.context.join('\n');
+      }
+    }
+    
+    // Extract localized content from regions
+    const localizedContent = rawData.regions || {};
+    const preferredLanguage = 'vi'; // Default to Vietnamese
+    const fallbackLanguage = 'en';
+    
+    const regionData = localizedContent[preferredLanguage] || localizedContent[fallbackLanguage] || {};
+    
     return {
       id: rawData.id,
       question: rawData.question || '',
       correctAnswer: rawData.answer,
       optionList: rawData.option_list.map(this.transformOptionModel),
       typeAnswer: this.mapAnswerType(rawData.type_of_answer),
-      explanation: rawData.localized_content?.explanation || undefined,
-      readingTranslation: undefined, // Not available in current API
+      explanation: regionData.explanation || rawData.localized_content?.explanation || undefined,
+      readingTranslation: regionData.reading_translation || undefined,
       correctAnswerTranslation: undefined, // Not available in current API
       optionListText: undefined, // Not available in current API
       type: PracticeType.READING,
-      passage: rawData.context?.join('\n') || rawData.question || '',
-      questionType: undefined, // Could be enhanced to detect question type
-      readingTranslationContext: undefined, // Not available in current API
+      passage: passage,
+      questionType: this.detectReadingQuestionType(rawData),
+      readingTranslationContext: regionData.context || undefined,
       imageUrl: rawData.image_url || undefined, // Main question image
+      imageList: imageList, // Context images for picture matching questions
     };
+  }
+
+  /**
+   * Detect listening question type based on API data
+   */
+  private static detectListeningQuestionType(rawData: ApiQuizQuestion): ListeningQuestionType | undefined {
+    // Use type_of_question field from API if available
+    if (rawData.type_of_question) {
+      const typeMap: Record<string, ListeningQuestionType> = {
+        'Listen_TrueFalse': ListeningQuestionType.LISTEN_TRUE_FALSE,
+        'Listen_Match_PictureWithAudio': ListeningQuestionType.LISTEN_MATCH_PICTURE_WITH_AUDIO,
+        'Listen_MultipleChoice_Picture': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_PICTURE,
+        'Listen_MultipleChoice_Statement': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_STATEMENT,
+        'Listen_MultipleChoice_ShortDialogue': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_SHORT_DIALOGUE,
+        'Listen_MultipleChoice_MediumDialogue': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_MEDIUM_DIALOGUE,
+        'Listen_MultipleChoice_Dialogue': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_DIALOGUE,
+        'Listen_MultipleChoice_ShortPassage': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_SHORT_PASSAGE,
+        'Listen_MultipleChoice_ConsistentStatement': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_CONSISTENT_STATEMENT,
+        'Listen_MultipleChoice_Interview': ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_INTERVIEW,
+      };
+      
+      return typeMap[rawData.type_of_question];
+    }
+
+    // Fallback to heuristic detection
+    if (rawData.type_of_answer === 'true_false') {
+      return ListeningQuestionType.LISTEN_TRUE_FALSE;
+    }
+    
+    if (rawData.option_list.some(opt => opt.img_link)) {
+      return ListeningQuestionType.LISTEN_MULTIPLE_CHOICE_PICTURE;
+    }
+
+    if (rawData.type_of_answer === 'wordMatching') {
+      return ListeningQuestionType.LISTEN_MATCH_PICTURE_WITH_AUDIO;
+    }
+
+    return undefined; // Let it default to normal question
+  }
+
+  /**
+   * Detect reading question type based on API data
+   */
+  private static detectReadingQuestionType(rawData: ApiQuizQuestion): ReadingQuestionType | undefined {
+    // Use type_of_question field from API if available
+    if (rawData.type_of_question) {
+      const typeMap: Record<string, ReadingQuestionType> = {
+        'Read_Ordering': ReadingQuestionType.READ_ORDERING,
+        'Read_MultipleChoice_WrongSentence': ReadingQuestionType.READ_WRONG_SENTENCE,
+        'Read_TrueFalse': ReadingQuestionType.READ_TRUE_FALSE,
+        'Read_Match_PictureWithStatement': ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT,
+        'Read_Match_StatementWithStatement': ReadingQuestionType.READ_MATCH_STATEMENT_WITH_STATEMENT,
+        'Read_Match_MissingWordWithStatement': ReadingQuestionType.READ_MATCH_MISSING_WORD_WITH_STATEMENT,
+        'Read_MultipleChoice_ShortPassage': ReadingQuestionType.READ_MULTIPLE_CHOICE_SHORT_PASSAGE,
+        'Read_MultipleChoice_LongPassage': ReadingQuestionType.READ_MULTIPLE_CHOICE_LONG_PASSAGE,
+        'Read_MultipleChoice_Statement': ReadingQuestionType.READ_MULTIPLE_CHOICE_STATEMENT,
+        'Read_MultipleChoice_Passage': ReadingQuestionType.READ_MULTIPLE_CHOICE_PASSAGE,
+        'Read_Matching_MissingSentence': ReadingQuestionType.READ_MATCHING_MISSING_SENTENCE,
+        'Read_MultipleChoice_MissingWords_sentence': ReadingQuestionType.READ_MULTIPLE_CHOICE_MISSING_WORDS_SENTENCE,
+      };
+      
+      return typeMap[rawData.type_of_question];
+    }
+
+    // Fallback to heuristic detection
+    if (rawData.type_of_answer === 'true_false') {
+      return ReadingQuestionType.READ_TRUE_FALSE;
+    }
+    
+    if (rawData.option_list.some(opt => opt.img_link)) {
+      return ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT;
+    }
+
+    return undefined; // Let it default to normal question
   }
 
   /**

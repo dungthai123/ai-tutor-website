@@ -1,5 +1,23 @@
+/**
+ * AnswerSection - HSK Answer Handling Component
+ * 
+ * Implements complete answer type handling as per the HSK plan:
+ * - TRUE_FALSE: Binary true/false answers with Vietnamese labels
+ * - IMAGE_SELECTION: Grid-based image selection with responsive layout
+ * - WORD_MATCHING: Compact grid for image-text matching
+ * - QUESTION_ANSWER: Traditional multiple choice answers
+ * 
+ * Features:
+ * - Visual feedback for selected answers
+ * - Correct/incorrect highlighting when showFeedback is enabled
+ * - Responsive grid layouts based on answer count
+ * - Translation support for answer options
+ * - Consistent styling across all answer types
+ */
+
 import { QuizModel, TypeAnswer } from '../../types';
-import { Card } from '@/shared/components/ui/cards/Card';
+import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { getFontSizeClasses } from '../../utils';
 
 interface AnswerSectionProps {
   quizModel: QuizModel;
@@ -16,11 +34,13 @@ export function AnswerSection({
   showFeedback = false,
   showTranslation = false 
 }: AnswerSectionProps) {
+  const { fontSize } = usePracticeDetailStore();
+  const fontClasses = getFontSizeClasses(fontSize);
   const correctAnswerIndex = parseInt(quizModel.correctAnswer) - 1;
 
   const renderTrueFalseAnswers = () => (
-    <div className="space-y-3">
-      {['True', 'False'].map((option, index) => {
+    <div className="grid grid-cols-2 gap-4">
+      {['Sai', 'Đúng'].map((option, index) => {
         const isSelected = selectedAnswer === index;
         const isCorrect = index === correctAnswerIndex;
         const showCorrectness = showFeedback;
@@ -29,94 +49,32 @@ export function AnswerSection({
           <button
             key={index}
             onClick={() => onAnswerSelected(index)}
-            className={`w-full p-4 text-left rounded-lg border-2 transition-all font-medium ${
+            className={`p-4 rounded-xl text-center font-semibold text-lg transition-all ${
               isSelected && !showCorrectness
-                ? 'border-blue-500 bg-blue-50'
+                ? 'bg-blue-600 text-white shadow-md'
                 : showCorrectness && isCorrect
-                ? 'border-green-500 bg-green-50 text-green-700'
+                ? 'bg-green-500 text-white shadow-md'
                 : showCorrectness && isSelected && !isCorrect
-                ? 'border-red-500 bg-red-50 text-red-700'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'bg-red-500 text-white shadow-md'
+                : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-lg">
-                {option === 'True' ? '✓' : '✗'}
-              </span>
-              <span>{option}</span>
-              {showCorrectness && isCorrect && (
-                <span className="ml-auto text-green-600">✓</span>
-              )}
-              {showCorrectness && isSelected && !isCorrect && (
-                <span className="ml-auto text-red-600">✗</span>
-              )}
-            </div>
+            {option}
           </button>
         );
       })}
     </div>
   );
 
-  const renderImageSelectionAnswers = () => (
-    <div className="grid grid-cols-2 gap-4">
-      {quizModel.optionList?.map((option, index) => {
-        const isSelected = selectedAnswer === index;
-        const isCorrect = index === correctAnswerIndex;
-        const showCorrectness = showFeedback;
-        
-        return (
-          <button
-            key={option.id}
-            onClick={() => onAnswerSelected(index)}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              isSelected && !showCorrectness
-                ? 'border-blue-500 bg-blue-50'
-                : showCorrectness && isCorrect
-                ? 'border-green-500 bg-green-50'
-                : showCorrectness && isSelected && !isCorrect
-                ? 'border-red-500 bg-red-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="relative">
-              {option.imageUrl ? (
-                <img
-                  src={option.imageUrl}
-                  alt={`Option ${index + 1}`}
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-100 rounded mb-2 flex items-center justify-center">
-                  <span className="text-gray-400">No Image</span>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">
-                  {String.fromCharCode(65 + index)}.
-                </span>
-                {showCorrectness && isCorrect && (
-                  <span className="text-green-600">✓</span>
-                )}
-                {showCorrectness && isSelected && !isCorrect && (
-                  <span className="text-red-600">✗</span>
-                )}
-              </div>
-              
-              <p className="text-sm mt-1">{option.text}</p>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
+  const renderImageSelectionAnswers = () => {
+    // Determine grid layout based on number of options
+    const optionCount = quizModel.optionList?.length || 0;
+    const gridCols = optionCount <= 2 ? 'grid-cols-1 md:grid-cols-2' : 
+                     optionCount <= 4 ? 'grid-cols-2' : 
+                     'grid-cols-2 md:grid-cols-3';
 
-  const renderWordMatchingGrid = () => (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-600 mb-4">
-        Select the correct word that matches the audio/context:
-      </p>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    return (
+      <div className={`grid ${gridCols} gap-4`}>
         {quizModel.optionList?.map((option, index) => {
           const isSelected = selectedAnswer === index;
           const isCorrect = index === correctAnswerIndex;
@@ -126,41 +84,42 @@ export function AnswerSection({
             <button
               key={option.id}
               onClick={() => onAnswerSelected(index)}
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
+              className={`p-4 rounded-xl transition-all ${
                 isSelected && !showCorrectness
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'bg-blue-600 text-white shadow-md'
                   : showCorrectness && isCorrect
-                  ? 'border-green-500 bg-green-50 text-green-700'
+                  ? 'bg-green-500 text-white shadow-md'
                   : showCorrectness && isSelected && !isCorrect
-                  ? 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
               }`}
             >
-              <div className="flex flex-col items-center gap-2">
-                {option.imageUrl && (
+              <div className="text-center">
+                {option.imageUrl ? (
                   <img
                     src={option.imageUrl}
                     alt={`Option ${index + 1}`}
-                    className="w-16 h-16 object-cover rounded"
+                    className="w-full h-24 object-cover rounded-lg mb-3"
                   />
+                ) : (
+                  <div className="w-full h-24 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                    <span className="text-gray-400">No Image</span>
+                  </div>
                 )}
-                <span className="font-medium">{option.text}</span>
-                {showCorrectness && isCorrect && (
-                  <span className="text-green-600">✓</span>
-                )}
-                {showCorrectness && isSelected && !isCorrect && (
-                  <span className="text-red-600">✗</span>
-                )}
+                
+                <div className={`font-semibold ${fontClasses.answerText}`}>
+                   {option.text}
+                </div>
               </div>
             </button>
           );
         })}
       </div>
-    </div>
-  );
+    );
+  };
 
-  const renderMultipleChoiceAnswers = () => (
-    <div className="space-y-3">
+  const renderWordMatchingGrid = () => (
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
       {quizModel.optionList?.map((option, index) => {
         const isSelected = selectedAnswer === index;
         const isCorrect = index === correctAnswerIndex;
@@ -170,29 +129,60 @@ export function AnswerSection({
           <button
             key={option.id}
             onClick={() => onAnswerSelected(index)}
-            className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+            className={`p-4 rounded-xl text-center transition-all ${
               isSelected && !showCorrectness
-                ? 'border-blue-500 bg-blue-50'
+                ? 'bg-blue-600 text-white shadow-md'
                 : showCorrectness && isCorrect
-                ? 'border-green-500 bg-green-50 text-green-700'
+                ? 'bg-green-500 text-white shadow-md'
                 : showCorrectness && isSelected && !isCorrect
-                ? 'border-red-500 bg-red-50 text-red-700'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'bg-red-500 text-white shadow-md'
+                : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold">
-                  {String.fromCharCode(65 + index)}.
-                </span>
-                <span>{option.text}</span>
-              </div>
-              {showCorrectness && isCorrect && (
-                <span className="text-green-600">✓</span>
-              )}
-              {showCorrectness && isSelected && !isCorrect && (
-                <span className="text-red-600">✗</span>
-              )}
+            <div className="flex flex-col items-center gap-2">
+              {/* {option.imageUrl && (
+                <img
+                  src={option.imageUrl}
+                  alt={`Option ${index + 1}`}
+                  className="w-12 h-12 object-cover rounded-lg"
+                />
+              )} */}
+              <span className={`font-semibold ${fontClasses.answerText}`}>
+               {option.text}
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderMultipleChoiceAnswers = () => (
+    <div className="grid grid-cols-1 gap-3">
+      {quizModel.optionList?.map((option, index) => {
+        const isSelected = selectedAnswer === index;
+        const isCorrect = index === correctAnswerIndex;
+        const showCorrectness = showFeedback;
+        
+        return (
+          <button
+            key={option.id}
+            onClick={() => onAnswerSelected(index)}
+            className={`p-4 rounded-xl text-left font-semibold transition-all ${
+              isSelected && !showCorrectness
+                ? 'bg-blue-600 text-white shadow-md'
+                : showCorrectness && isCorrect
+                ? 'bg-green-500 text-white shadow-md'
+                : showCorrectness && isSelected && !isCorrect
+                ? 'bg-red-500 text-white shadow-md'
+                : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-bold">
+                
+              </span>
+              <span className={fontClasses.answerText}>{option.text}</span>
             </div>
           </button>
         );
@@ -218,14 +208,14 @@ export function AnswerSection({
   };
 
   return (
-    <Card className="p-6">
-      <h4 className="font-semibold mb-4">Choose your answer:</h4>
-      
-      {renderAnswers()}
+    <div className="">
+      <div className="mb-6">
+        {renderAnswers()}
+      </div>
 
       {/* Show correct answer translation if available and feedback is shown */}
       {showFeedback && showTranslation && quizModel.correctAnswerTranslation && (
-        <div className="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
           <p className="text-sm text-blue-800">
             <strong>Correct Answer Translation:</strong> {quizModel.correctAnswerTranslation}
           </p>
@@ -234,12 +224,12 @@ export function AnswerSection({
 
       {/* Show options translation if available */}
       {showTranslation && quizModel.optionListText && (
-        <div className="mt-4 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+        <div className="mt-4 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
           <p className="text-sm text-yellow-800">
             <strong>Options Translation:</strong> {quizModel.optionListText}
           </p>
         </div>
       )}
-    </Card>
+    </div>
   );
 } 

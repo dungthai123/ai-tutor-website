@@ -29,7 +29,7 @@ export default function PracticeTypePage() {
 
   return (
     <MainLayout>
-      <div className="max-w mx-auto py-8">
+      <div className="max-w mx-auto py-8 ">
         <PracticeTypeHeader 
           practiceType={practiceType} 
           level={level} 

@@ -1,8 +1,33 @@
-import { ReadingQuizModel } from '../../types';
-import { Card } from '@/shared/components/ui/cards/Card';
-import { Button } from '@/shared/components/ui/buttons/Button';
+/**
+ * ReadingQuestionContent - HSK Reading Test Component
+ * 
+ * Implements HSK-specific question type handling as per the plan:
+ * - Uses questionType field to route to specific question handlers
+ * - Supports specialized components for different reading question types
+ * - Integrates with shared components (TextAndTranslate, ImageGrid, AspectRatioImage)
+ * 
+ * Supported Question Types:
+ * - READ_TRUE_FALSE: Statement evaluation questions
+ * - READ_ORDERING: Sentence ordering tasks  
+ * - READ_WRONG_SENTENCE: Incorrect sentence identification
+ * - READ_MATCH_PICTURE_WITH_STATEMENT: Picture matching tasks
+ * - Default: Falls back to general reading question handler
+ */
+
+import { ReadingQuizModel, TypeAnswer, ReadingQuestionType } from '../../types';
 import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
-import { getImageUrl, isValidImageUrl } from '../../utils';
+import { ImageGrid } from '../shared';
+import { getFontSizeClasses } from '../../utils';
+
+// Import specific question type components
+import { 
+  TrueFalseQuestion,
+  OrderingQuestion,
+  WrongSentenceQuestion,
+  PictureMatchingQuestion,
+  StatementMatchingQuestion,
+  DefaultReadingQuestion
+} from './reading';
 
 interface ReadingQuestionContentProps {
   quizModel: ReadingQuizModel;
@@ -12,144 +37,78 @@ interface ReadingQuestionContentProps {
 
 export function ReadingQuestionContent({ 
   quizModel, 
-  questionIndex, 
-  totalQuestions 
 }: ReadingQuestionContentProps) {
   const {
     isShowTranslation,
     isShowExplanation,
-    toggleTranslation,
+    fontSize,
   } = usePracticeDetailStore();
 
+  const fontClasses = getFontSizeClasses(fontSize);
 
+  // Render by specific question type based on questionType field
+  const renderByQuestionType = () => {
+    const questionProps = {
+      quizModel,
+      isShowTranslation,
+      isShowExplanation,
+      fontClasses
+    };
 
-  const renderMainQuestionImage = () => {
-    if (!isValidImageUrl(quizModel.imageUrl)) return null;
-
-    return (
-      <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Question Image</h4>
-        <div className="relative">
-          <img
-            src={getImageUrl(quizModel.imageUrl!)}
-            alt="Question image"
-            className="w-full max-w-md mx-auto rounded-lg border border-gray-200 shadow-sm"
-            onError={(e) => {
-              console.error('Failed to load question image:', quizModel.imageUrl);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-      </div>
-    );
+    switch (quizModel.questionType) {
+      case ReadingQuestionType.READ_TRUE_FALSE:
+        return <TrueFalseQuestion {...questionProps} />;
+      case ReadingQuestionType.READ_ORDERING:
+        return <OrderingQuestion {...questionProps} />;
+      case ReadingQuestionType.READ_WRONG_SENTENCE:
+        return <WrongSentenceQuestion {...questionProps} />;
+      case ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT:
+        return <PictureMatchingQuestion {...questionProps} />;
+      case ReadingQuestionType.READ_MATCH_STATEMENT_WITH_STATEMENT:
+      case ReadingQuestionType.READ_MATCH_MISSING_WORD_WITH_STATEMENT:
+        return <StatementMatchingQuestion {...questionProps} />;
+      default:
+        return <DefaultReadingQuestion {...questionProps} />;
+    }
   };
 
+  // Only render special image grids for specific question types that need them
   const renderImageGrid = () => {
-    // Show option images for specific question types OR if any option has an image
-    const hasOptionImages = quizModel.optionList?.some(option => isValidImageUrl(option.imageUrl));
-    
-    if (!hasOptionImages) return null;
-
-    return (
-      <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Answer Options</h4>
-        <div className="grid grid-cols-2 gap-3">
-          {quizModel.optionList?.map((option, index) => (
-            isValidImageUrl(option.imageUrl) && (
-              <div key={option.id} className="relative">
-                <img
-                  src={getImageUrl(option.imageUrl!)}
-                  alt={`Option ${index + 1}: ${option.text}`}
-                  className="w-full h-24 object-cover rounded border border-gray-200"
-                  onError={(e) => {
-                    console.error('Failed to load option image:', option.imageUrl);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1 rounded">
-                  {String.fromCharCode(65 + index)}
-                </span>
-                <div className="absolute bottom-1 left-1 right-1 bg-black bg-opacity-60 text-white text-xs px-1 rounded">
-                  {option.text}
-                </div>
-              </div>
-            )
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderPassage = () => {
-    if (!quizModel.passage) return null;
-
-    return (
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">📖</span>
-          <h4 className="font-semibold text-gray-800">Reading Passage</h4>
-        </div>
+    // Only show WORD_MATCHING image grid if not handled by specific question type
+    if (quizModel.typeAnswer === TypeAnswer.WORD_MATCHING && 
+        quizModel.questionType !== ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT) {
+      
+      // Try imageList first (context images), then optionList images
+      const imageUrls = quizModel.imageList && quizModel.imageList.length > 0
+        ? quizModel.imageList
+        : quizModel.optionList?.map(opt => opt.imageUrl || '').filter(Boolean) || [];
         
-        <div className="prose prose-sm max-w-none">
-          <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-            {quizModel.passage}
+      if (imageUrls.length > 0) {
+        return (
+          <div className="mb-6">
+            <div className="mb-4 p-4 bg-purple-50 rounded-lg">
+              <h4 className="text-lg font-semibold text-purple-800 mb-2">🧩 Match Words with Images</h4>
+              <p className="text-sm text-purple-600">
+                Match the description with the correct image.
+              </p>
+            </div>
+            <ImageGrid images={imageUrls} />
           </div>
-        </div>
+        );
+      }
+    }
 
-        {/* Passage Translation */}
-        {isShowTranslation && quizModel.readingTranslationContext && (
-          <div className="mt-4 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-            <p className="text-sm text-yellow-800">
-              <strong>Passage Translation:</strong> {quizModel.readingTranslationContext}
-            </p>
-          </div>
-        )}
-      </div>
-    );
+    return null;
   };
 
   return (
-    <Card className="p-6">
-      {/* Question number indicator */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500">
-          Reading Question {questionIndex + 1} of {totalQuestions}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={toggleTranslation}
-            className={`text-xs px-2 py-1 ${isShowTranslation ? 'bg-blue-100' : ''}`}
-          >
-            🌐 Translate
-          </Button>
-        </div>
-      </div>
+    <div>
 
-      {/* Reading Passage */}
-      {renderPassage()}
-
-      {/* Main Question Image */}
-      {renderMainQuestionImage()}
-
-      {/* Answer Option Images */}
+      {/* Special image grid for WORD_MATCHING (only if not handled by specific question type) */}
       {renderImageGrid()}
 
-      {/* Question Text */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          {quizModel.question}
-        </h3>
-        
-        {/* Question Translation */}
-        {isShowTranslation && quizModel.readingTranslation && (
-          <div className="mt-3 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-            <p className="text-sm text-yellow-800">
-              <strong>Question Translation:</strong> {quizModel.readingTranslation}
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Render specific question type content */}
+      {renderByQuestionType()}
 
       {/* Explanation */}
       {isShowExplanation && quizModel.explanation && (
@@ -165,6 +124,6 @@ export function ReadingQuestionContent({
           Question Type: {quizModel.questionType}
         </div>
       )}
-    </Card>
+    </div>
   );
 } 

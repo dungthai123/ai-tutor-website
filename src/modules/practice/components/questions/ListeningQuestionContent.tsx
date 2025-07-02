@@ -1,8 +1,39 @@
-import { useState } from 'react';
-import { ListeningQuizModel, TypeAnswer } from '../../types';
-import { Card } from '@/shared/components/ui/cards/Card';
+/**
+ * ListeningQuestionContent - HSK Listening Test Component
+ * 
+ * Implements HSK-specific listening question type handling as per the plan:
+ * - Uses questionType field to route to specific question handlers
+ * - Real audio player with progress tracking, seeking, and playback speed control
+ * - Integrates SubtitlesSection component for transcript display
+ * - Supports specialized components for different listening question types
+ * 
+ * Supported Question Types:
+ * - LISTEN_TRUE_FALSE: Audio-based true/false questions
+ * - LISTEN_MATCH_PICTURE_WITH_AUDIO: Audio-picture matching tasks
+ * - Default: Falls back to general listening question handler
+ * 
+ * Features:
+ * - Real-time audio progress tracking
+ * - Clickable progress bar for seeking
+ * - Variable playback speed (1x, 1.25x, 1.5x, 0.75x)
+ * - Integrated transcript toggle
+ * - Translation support
+ */
+
+import { useState, useEffect, useRef } from 'react';
+import { ListeningQuizModel, ListeningQuestionType } from '../../types';
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { SubtitlesSection } from '../shared/SubtitlesSection';
+import { AspectRatioImage } from '../shared/AspectRatioImage';
+import { getFontSizeClasses } from '../../utils';
+
+// Import specific question type components
+import { 
+  ListenTrueFalseQuestion,
+  ListenPictureMatchQuestion,
+  DefaultListeningQuestion
+} from './listening';
 
 interface ListeningQuestionContentProps {
   quizModel: ListeningQuizModel;
@@ -12,19 +43,24 @@ interface ListeningQuestionContentProps {
 
 export function ListeningQuestionContent({ 
   quizModel, 
-  questionIndex, 
-  totalQuestions 
+  questionIndex 
 }: ListeningQuestionContentProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const {
     isShowTranslation,
     isShowExplanation,
     isShowTranscript,
+    fontSize,
     toggleTranslation,
     toggleTranscript
   } = usePracticeDetailStore();
+
+  const fontClasses = getFontSizeClasses(fontSize);
 
   // Determine audio URL and transcript
   const audioUrl = quizModel.audioContext?.length ? quizModel.audioContext : quizModel.audio;
@@ -32,164 +68,232 @@ export function ListeningQuestionContent({
     ? quizModel.transcriptContext 
     : quizModel.transcript;
 
-  const handlePlayAudio = () => {
-    if (!audioUrl) return;
+  // Render by specific question type based on questionType field
+  const renderByQuestionType = () => {
+    const questionProps = {
+      quizModel,
+      isShowTranslation,
+      isShowExplanation,
+      isShowTranscript,
+      fontClasses
+    };
 
-    if (audioElement) {
-      if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        audioElement.play();
-        setIsPlaying(true);
-      }
-    } else {
+    switch (quizModel.questionType) {
+      case ListeningQuestionType.LISTEN_TRUE_FALSE:
+        return <ListenTrueFalseQuestion {...questionProps} />;
+      case ListeningQuestionType.LISTEN_MATCH_PICTURE_WITH_AUDIO:
+        return <ListenPictureMatchQuestion {...questionProps} />;
+      default:
+        return <DefaultListeningQuestion {...questionProps} />;
+    }
+  };
+
+  // Initialize audio element
+  useEffect(() => {
+    if (audioUrl && !audioRef.current) {
       const audio = new Audio(audioUrl);
+      audio.preload = 'metadata';
+      
+      audio.onloadedmetadata = () => {
+        setDuration(audio.duration);
+      };
+      
+      audio.ontimeupdate = () => {
+        setCurrentTime(audio.currentTime);
+      };
+      
       audio.onplay = () => setIsPlaying(true);
       audio.onpause = () => setIsPlaying(false);
-      audio.onended = () => setIsPlaying(false);
+      audio.onended = () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      };
+      
       audio.onerror = () => {
         console.error('Audio failed to load:', audioUrl);
         setIsPlaying(false);
       };
       
-      setAudioElement(audio);
-      audio.play();
-      setIsPlaying(true);
+      audioRef.current = audio;
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [audioUrl]);
+
+  const handlePlayAudio = () => {
+    if (!audioRef.current || !audioUrl) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
     }
   };
 
-  const handleRestartAudio = () => {
-    if (audioElement) {
-      audioElement.currentTime = 0;
-      audioElement.play();
-      setIsPlaying(true);
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !duration) return;
+    
+    const progressBar = e.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newTime = (clickX / rect.width) * duration;
+    
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handlePlaybackRateChange = () => {
+    const rates = [1, 1.25, 1.5, 0.75];
+    const currentIndex = rates.indexOf(playbackRate);
+    const nextRate = rates[(currentIndex + 1) % rates.length];
+    
+    setPlaybackRate(nextRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextRate;
     }
   };
 
-  const renderImageGrid = () => {
-    if (quizModel.typeAnswer !== TypeAnswer.WORD_MATCHING && 
-        quizModel.typeAnswer !== TypeAnswer.IMAGE_SELECTION) {
-      return null;
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Audio player matching the design in the image
+  const renderAudioPlayer = () => {
+    if (!audioUrl) {
+      return (
+        <div className="mb-8">
+          <div className="inline-flex items-center px-3 py-1 mb-4 bg-black text-white text-sm font-medium rounded-full">
+            Câu {questionIndex + 1}
+          </div>
+          <div className="bg-gray-100 rounded-lg p-4 mb-6">
+            <p className="text-gray-500 text-center">No audio available for this question</p>
+          </div>
+        </div>
+      );
     }
 
     return (
-      <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Images</h4>
-        <div className="grid grid-cols-2 gap-3">
-          {quizModel.optionList?.map((option, index) => (
-            option.imageUrl && (
-              <div key={option.id} className="relative">
-                <img
-                  src={option.imageUrl}
-                  alt={`Option ${index + 1}`}
-                  className="w-full h-24 object-cover rounded border border-gray-200"
-                />
-                <span className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1 rounded">
-                  {String.fromCharCode(65 + index)}
-                </span>
+      <div className="mb-8">
+        {/* Question number badge */}
+        <div className="inline-flex items-center px-3 py-1 mb-4 bg-black text-white text-sm font-medium rounded-full">
+          Câu {questionIndex + 1}
+        </div>
+        
+        {/* Audio player controls */}
+        <div className="bg-blue-100 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-4 mb-3">
+            <button
+              onClick={handlePlayAudio}
+              disabled={!audioUrl}
+              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-full flex items-center justify-center transition-colors"
+            >
+              {isPlaying ? '⏸️' : '▶️'}
+            </button>
+            
+            {/* Audio progress bar */}
+            <div className="flex-1 flex items-center gap-3">
+              <div 
+                className="flex-1 bg-blue-300 rounded-full h-2 relative cursor-pointer"
+                onClick={handleProgressClick}
+              >
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-150"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+                <div 
+                  className="absolute top-0 w-4 h-4 bg-blue-500 rounded-full transform -translate-y-1 -translate-x-2 transition-all duration-150"
+                  style={{ left: `${progressPercentage}%` }}
+                ></div>
               </div>
-            )
-          ))}
+              <span className="text-sm text-gray-600 font-medium min-w-[40px]">
+                {formatTime(duration)}
+              </span>
+            </div>
+          </div>
+          
+          {/* Additional controls */}
+          <div className="flex items-center gap-2">
+            {transcript && (
+              <button 
+                onClick={toggleTranscript}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  isShowTranscript 
+                    ? 'bg-blue-300 text-blue-800' 
+                    : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
+                }`}
+              >
+                📝 Xem phụ đề
+              </button>
+            )}
+            <button 
+              onClick={handlePlaybackRateChange}
+              className="px-3 py-1 bg-blue-200 text-blue-700 text-sm rounded-md hover:bg-blue-300 transition-colors"
+            >
+              🔄 {playbackRate}x
+            </button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <Card className="p-6">
-      {/* Question number indicator */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500">
-          Listening Question {questionIndex + 1} of {totalQuestions}
-        </span>
-        <div className="flex gap-2">
+    <div className="bg-white">
+      {/* Control buttons */}
+      <div className="flex justify-end gap-2 mb-4">
+        <Button
+          variant="secondary"
+          onClick={toggleTranslation}
+          className={`text-xs px-3 py-1 ${isShowTranslation ? 'bg-blue-100' : ''}`}
+        >
+          🌐 Translate
+        </Button>
+        {transcript && (
           <Button
             variant="secondary"
-            onClick={toggleTranslation}
-            className={`text-xs px-2 py-1 ${isShowTranslation ? 'bg-blue-100' : ''}`}
+            onClick={toggleTranscript}
+            className={`text-xs px-3 py-1 ${isShowTranscript ? 'bg-green-100' : ''}`}
           >
-            🌐 Translate
+            📝 Transcript
           </Button>
-          {transcript && (
-            <Button
-              variant="secondary"
-              onClick={toggleTranscript}
-              className={`text-xs px-2 py-1 ${isShowTranscript ? 'bg-green-100' : ''}`}
-            >
-              📝 Transcript
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Audio Player */}
-      <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">🎧</span>
-          <span className="font-semibold">Audio</span>
-        </div>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          Click play to listen to the audio clip. You can replay it as many times as needed.
-        </p>
-        
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={handlePlayAudio}
-            className={`flex items-center gap-2 ${
-              isPlaying ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            {isPlaying ? '⏸️ Pause' : '▶️ Play'}
-          </Button>
-          
-          <Button
-            variant="secondary"
-            onClick={handleRestartAudio}
-            disabled={!audioElement}
-            className="flex items-center gap-2"
-          >
-            🔄 Restart
-          </Button>
-        </div>
-      </div>
-
-      {/* Image Grid for word matching/image selection */}
-      {renderImageGrid()}
-
-      {/* Question Text */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-text-primary mb-4">
-          {quizModel.question}
-        </h3>
-        
-        {/* Translation */}
-        {isShowTranslation && quizModel.readingTranslation && (
-          <div className="mt-3 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-            <p className="text-sm text-yellow-800">
-              <strong>Translation:</strong> {quizModel.readingTranslation}
-            </p>
-          </div>
         )}
       </div>
 
-      {/* Transcript */}
-      {isShowTranscript && transcript && (
-        <div className="mb-4 p-4 bg-gray-50 rounded">
-          <h4 className="font-medium text-gray-700 mb-2">📝 Transcript</h4>
-          <p className="text-gray-600 leading-relaxed">{transcript}</p>
-          
-          {/* Context translation if available */}
-          {isShowTranslation && quizModel.readingTranslationContext && (
-            <div className="mt-3 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-              <p className="text-sm text-yellow-800">
-                <strong>Translation:</strong> {quizModel.readingTranslationContext}
-              </p>
-            </div>
-          )}
+      {/* Question Image - displayed above audio player when available */}
+      {quizModel.imageUrl && (
+        <div className="mb-6">
+          <AspectRatioImage 
+            src={quizModel.imageUrl}
+            alt="Question image"
+            aspectRatio="video"
+          />
         </div>
       )}
+
+      {/* Audio Player */}
+      {renderAudioPlayer()}
+
+      {/* Render specific question type content */}
+      {renderByQuestionType()}
+
+      {/* Subtitles Section - using the specialized component */}
+      <SubtitlesSection 
+        isShowTranscript={isShowTranscript}
+        transcript={transcript}
+        transcriptContext={quizModel.transcriptContext}
+        isShowTranslation={isShowTranslation}
+        translation={quizModel.readingTranslationContext}
+        fontClasses={fontClasses}
+      />
 
       {/* Explanation */}
       {isShowExplanation && quizModel.explanation && (
@@ -198,6 +302,13 @@ export function ListeningQuestionContent({
           <p className="text-green-700">{quizModel.explanation}</p>
         </div>
       )}
-    </Card>
+
+      {/* Question Type Info */}
+      {quizModel.questionType && (
+        <div className="mt-4 text-xs text-gray-500">
+          Question Type: {quizModel.questionType}
+        </div>
+      )}
+    </div>
   );
 } 
