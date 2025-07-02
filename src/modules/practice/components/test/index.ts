@@ -15,4 +15,3 @@ export { TestStateRenderer } from './TestStateRenderer';
 export { QuestionNavigationGrid } from './QuestionNavigationGrid';
 export { TestNavigationPanel } from './TestNavigationPanel';
 export { TestSubmissionModal } from './TestSubmissionModal';
-export { TestNavigationDemo } from './TestNavigationDemo'; 

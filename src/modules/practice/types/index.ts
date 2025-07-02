@@ -300,6 +300,7 @@ export interface UsePracticePageReturn {
     setLevel: (level: HSKLevel) => void;
     refreshTopics: () => Promise<void>;
   };
+  isLoaded: boolean;
 }
 
 export interface UseTestSessionReturn {

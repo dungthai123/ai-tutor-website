@@ -11,31 +11,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // LiveKit Dashboard Design System Colors
+        // Light Theme Design System Colors
         background: {
-          primary: '#0a0a0a',
-          secondary: '#1a1a1a',
-          tertiary: '#2a2a2a',
-          card: '#1e1e1e',
-          hover: '#2d2d2d',
+          primary: '#ffffff',
+          secondary: '#f8fafc',
+          tertiary: '#f1f5f9',
+          card: '#ffffff',
+          hover: '#f1f5f9',
         },
         text: {
-          primary: '#ffffff',
-          secondary: '#a0a0a0',
-          muted: '#666666',
-          disabled: '#404040',
+          primary: '#1e293b',
+          secondary: '#64748b',
+          muted: '#94a3b8',
+          disabled: '#cbd5e1',
         },
         accent: {
-          primary: '#00d4ff',
-          secondary: '#0099cc',
-          success: '#00ff88',
-          warning: '#ffaa00',
-          error: '#ff4444',
+          primary: '#3b82f6',
+          secondary: '#2563eb',
+          success: '#10b981',
+          warning: '#f59e0b',
+          error: '#ef4444',
         },
         border: {
-          subtle: '#333333',
-          medium: '#444444',
-          strong: '#555555',
+          subtle: '#e2e8f0',
+          medium: '#cbd5e1',
+          strong: '#94a3b8',
         },
         // Legacy colors for backward compatibility
         primary: {

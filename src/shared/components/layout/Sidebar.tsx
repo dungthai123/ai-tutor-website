@@ -38,16 +38,16 @@ export const Sidebar: React.FC = () => {
   const transitionClass = isHydrated ? 'transition-all duration-300' : '';
 
   return (
-    <aside className={`${sidebarWidth} bg-background-primary border-r border-border-subtle h-full flex flex-col overflow-hidden ${transitionClass}`}>
+    <aside className={`${sidebarWidth} bg-white border-r border-gray-200 h-full flex flex-col overflow-hidden ${transitionClass}`}>
       <div className="flex-1 py-4 overflow-y-auto">
         {/* Logo/Brand and Toggle Button */}
         <div className="px-6 mb-8 flex items-center justify-between">
           {!isCollapsed && (
-            <h1 className="text-xl font-bold text-text-primary">AI English Tutor</h1>
+            <h1 className="text-xl font-bold text-gray-800">AI English Tutor</h1>
           )}
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-background-hover transition-colors text-text-secondary hover:text-text-primary"
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-800"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <span className="text-lg">

@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 
 interface ClientOnlyProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
 }
 
-export default function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
+/**
+ * A wrapper component that ensures its children are only rendered on the client side.
+ * This is useful for preventing SSR hydration errors with components that rely on
+ * client-specific APIs like localStorage or window.
+ */
+export function ClientOnly({ children }: ClientOnlyProps) {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -15,7 +19,7 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
   }, []);
 
   if (!hasMounted) {
-    return <>{fallback}</>;
+    return null;
   }
 
   return <>{children}</>;

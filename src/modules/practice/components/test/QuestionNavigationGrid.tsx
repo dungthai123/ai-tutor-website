@@ -2,11 +2,17 @@
 
 import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
 import { cn } from '@/utils/helpers';
-import { PracticeType } from '../../types';
+import { QuizModel } from '../../types';
 
 interface QuestionNavigationGridProps {
   onQuestionSelect?: (questionIndex: number) => void;
   className?: string;
+}
+
+interface QuestionGroup {
+  type: string;
+  questions: Array<{ question: QuizModel; globalIndex: number }>;
+  title: string;
 }
 
 export function QuestionNavigationGrid({ 
@@ -18,7 +24,6 @@ export function QuestionNavigationGrid({
     setCurrentQuestion,
     markQuestionAsReviewed,
     getQuestionStatus,
-    testType,
   } = useTestNavigationStore();
 
   const handleQuestionClick = (index: number) => {
@@ -31,7 +36,7 @@ export function QuestionNavigationGrid({
     const status = getQuestionStatus(index);
     
     if (status.isCurrent) {
-      return 'bg-blue-600 text-white shadow-md';
+      return 'bg-green-600 text-white shadow-md';
     }
     
     if (status.isAnswered) {
@@ -39,6 +44,39 @@ export function QuestionNavigationGrid({
     }
     
     return 'bg-blue-200 text-blue-600';
+  };
+
+  const getSectionTitle = (questionType: string, sectionIndex: number): string => {
+    const partNumber = sectionIndex + 1;
+    const chinesePart = `第${['一', '二', '三', '四', '五', '六'][sectionIndex] || partNumber}部分`;
+    
+    return `${chinesePart}`;
+  };
+
+  // Group questions by their questionType
+  const groupQuestionsByType = (): QuestionGroup[] => {
+    const groups: Record<string, Array<{ question: QuizModel; globalIndex: number }>> = {};
+    
+    questions.forEach((question, index) => {
+      // Get the question type from the question object
+      const questionType = question.questionType || 'default';
+      
+      if (!groups[questionType]) {
+        groups[questionType] = [];
+      }
+      
+      groups[questionType].push({
+        question,
+        globalIndex: index
+      });
+    });
+
+    // Convert to array and add titles
+    return Object.entries(groups).map(([type, questionsInGroup], index) => ({
+      type,
+      questions: questionsInGroup,
+      title: getSectionTitle(type, index)
+    }));
   };
 
   if (questions.length === 0) {
@@ -49,75 +87,38 @@ export function QuestionNavigationGrid({
     );
   }
 
-  // Determine sections based on test type or question count
-  const isListeningTest = testType === PracticeType.LISTENING;
-  const totalQuestions = questions.length;
-  
-  // For demo purposes, if we have more than 40 questions, split them
-  const listeningQuestions = totalQuestions > 40 ? questions.slice(0, 40) : questions;
-  const readingQuestions = totalQuestions > 40 ? questions.slice(40) : [];
-  
-  const renderQuestionSection = (
-    sectionQuestions: typeof questions,
-    startIndex: number,
-    title: string
-  ) => (
-    <div className="mb-6">
-      {/* Section Header */}
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {title}
-      </h3>
-      
-      {/* Question Grid */}
-      <div className="grid grid-cols-5 gap-3">
-        {sectionQuestions.map((_, localIndex) => {
-          const globalIndex = startIndex + localIndex;
-          const questionNumber = (globalIndex + 1).toString().padStart(2, '0');
-          
-          return (
-            <button
-              key={globalIndex}
-              onClick={() => handleQuestionClick(globalIndex)}
-              className={cn(
-                'w-14 h-14 rounded-xl text-sm font-semibold transition-all duration-200',
-                'flex items-center justify-center',
-                'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
-                getQuestionButtonStyle(globalIndex)
-              )}
-              title={`Question ${globalIndex + 1} - ${getQuestionStatus(globalIndex).isAnswered ? 'Answered' : 'Unanswered'}`}
-            >
-              {questionNumber}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const questionGroups = groupQuestionsByType();
 
   return (
     <div className={cn('', className)}>
-      {/* Header with legend */}
-
-
-      {/* Question Sections */}
-      {isListeningTest || totalQuestions <= 40 ? (
-        // Single section for listening or small tests
-        renderQuestionSection(
-          listeningQuestions,
-          0,
-          'Phần 1: 第一部分'
-        )
-      ) : (
-        // Multiple sections for combined tests
-        <>
-          {listeningQuestions.length > 0 && 
-            renderQuestionSection(listeningQuestions, 0, 'Phần 1: 第一部分')
-          }
-          {readingQuestions.length > 0 && 
-            renderQuestionSection(readingQuestions, 40, 'Phần 2: 第二部分')
-          }
-        </>
-      )}
+      {questionGroups.map((group) => (
+        <div key={group.type} className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            {group.title}
+          </h3>
+          <div className="grid grid-cols-5 gap-3">
+            {group.questions.map(({ globalIndex }) => {
+              const questionNumber = (globalIndex + 1).toString().padStart(2, '0');
+              
+              return (
+                <button
+                  key={globalIndex}
+                  onClick={() => handleQuestionClick(globalIndex)}
+                  className={cn(
+                    'w-14 h-14 rounded-xl text-sm font-semibold transition-all duration-200',
+                    'flex items-center justify-center',
+                    'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+                    getQuestionButtonStyle(globalIndex)
+                  )}
+                  title={`Question ${globalIndex + 1} - ${getQuestionStatus(globalIndex).isAnswered ? 'Answered' : 'Unanswered'}`}
+                >
+                  {questionNumber}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 } 

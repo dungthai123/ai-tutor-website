@@ -82,7 +82,7 @@ export class PracticeApiService {
   static async getHSKTestsByLevel(level: HSKLevel): Promise<PracticeTopicModel[]> {
     try {
       const response = await apiClient.get<ApiHSKTestResponse>(
-        `/api/v1/hsk-tests/level/${level}?page=1&per_page=100`
+      `/api/v1/hsk-tests/level/${level}?pageIndex=1&pageSize=25`
       );
       
       if (!response.success || !response.data?.data || !Array.isArray(response.data.data)) {
