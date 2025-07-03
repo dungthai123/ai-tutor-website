@@ -1,42 +1,32 @@
 import { useState, useEffect } from 'react';
-import { PracticeType, QuizModel } from '../types';
-import { PracticeApiService } from '../services';
-
-interface TestScore {
-  correct: number;
-  total: number;
-  percentage: number;
-}
+import { PracticeType, QuizModel, PracticeTopicModel, TestScore } from '../types';
+import { PracticeService } from '../services';
 
 export function useTestLogic(testType: PracticeType, testId: string) {
   const [questions, setQuestions] = useState<QuizModel[]>([]);
+  const [topic, setTopic] = useState<PracticeTopicModel | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadTestData = async () => {
       setLoading(true);
       try {
-        let testQuestions: QuizModel[] = [];
-        
-        if (testType === PracticeType.LISTENING) {
-          testQuestions = await PracticeApiService.getListeningQuestions(testId);
-        } else if (testType === PracticeType.READING) {
-          testQuestions = await PracticeApiService.getReadingQuestions(testId);
-        }
-        
-        setQuestions(testQuestions);
+        const testData = await PracticeService.initializeTest(testType, testId);
+        setQuestions(testData.questions);
+        setTopic(testData.topic);
       } catch (error) {
-        console.error('Failed to load questions:', error);
+        console.error('Failed to load test data:', error);
         setQuestions([]);
+        setTopic(null);
       } finally {
         setLoading(false);
       }
     };
 
-    loadQuestions();
+    loadTestData();
   }, [testId, testType]);
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -63,18 +53,7 @@ export function useTestLogic(testType: PracticeType, testId: string) {
   };
 
   const calculateScore = (): TestScore => {
-    let correct = 0;
-    questions.forEach((question, index) => {
-      const selected = selectedAnswers[index];
-      if (selected !== undefined && selected === parseInt(question.correctAnswer) - 1) {
-        correct++;
-      }
-    });
-    return {
-      correct,
-      total: questions.length,
-      percentage: Math.round((correct / questions.length) * 100)
-    };
+    return PracticeService.calculateScore(questions, selectedAnswers);
   };
 
   const currentQuestion = questions[currentIndex];
@@ -90,6 +69,7 @@ export function useTestLogic(testType: PracticeType, testId: string) {
     showResults,
     loading,
     answeredCount,
+    topic,
     handleAnswerSelect,
     handleNext,
     handlePrevious,

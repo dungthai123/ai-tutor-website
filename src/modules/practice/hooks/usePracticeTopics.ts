@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { HSKLevel, PracticeType, PracticeTopicModel } from '../types';
-import { PracticeApiService } from '../services';
+import { PracticeService } from '../services';
 
 export function usePracticeTopics(practiceType: PracticeType, level: HSKLevel) {
   const [topics, setTopics] = useState<PracticeTopicModel[]>([]);
@@ -10,8 +10,7 @@ export function usePracticeTopics(practiceType: PracticeType, level: HSKLevel) {
     const fetchTopics = async () => {
       setLoading(true);
       try {
-        const allTopics = await PracticeApiService.getHSKTestsByLevel(level);
-        const filteredTopics = allTopics.filter(topic => topic.type === practiceType);
+        const filteredTopics = await PracticeService.fetchTopicsByType(practiceType, level);
         setTopics(filteredTopics);
       } catch (error) {
         console.error('Failed to fetch topics:', error);

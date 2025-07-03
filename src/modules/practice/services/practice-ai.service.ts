@@ -87,4 +87,4 @@ export class PracticeAIService {
 
 // Export convenience functions
 export const getPracticeFeedback = PracticeAIService.getFeedback;
-export const evaluateAnswer = PracticeAIService.evaluateAnswer; 
+export const evaluateAnswer = PracticeAIService.evaluateAnswer;
