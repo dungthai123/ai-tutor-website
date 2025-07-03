@@ -1,6 +1,6 @@
 'use client';
 
-import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { cn } from '@/utils/helpers';
 
@@ -18,13 +18,13 @@ export function TestSubmissionModal({
   className 
 }: TestSubmissionModalProps) {
   const {
-    questions,
+    quizList: questions,
     getAnsweredCount,
     getUnansweredCount,
     getProgressPercentage,
     isSubmitting,
     canSubmitTest,
-  } = useTestNavigationStore();
+  } = useTestSessionStoreForReadingAndListening();
 
   const answeredCount = getAnsweredCount();
   const unansweredCount = getUnansweredCount();

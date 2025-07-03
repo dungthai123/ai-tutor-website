@@ -15,7 +15,7 @@
  */
 
 import { ReadingQuizModel, TypeAnswer, ReadingQuestionType } from '../../types';
-import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { ImageGrid } from '../shared';
 import { getFontSizeClasses } from '../../utils';
 
@@ -42,7 +42,7 @@ export function ReadingQuestionContent({
     isShowTranslation,
     isShowExplanation,
     fontSize,
-  } = usePracticeDetailStore();
+  } = useTestSessionStoreForReadingAndListening();
 
   const fontClasses = getFontSizeClasses(fontSize);
 

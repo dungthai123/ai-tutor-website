@@ -68,7 +68,7 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
               answeredCount={sync.answeredCount}
               unansweredCount={sync.unansweredCount}
               totalQuestions={state.questions.length}
-              canSubmitTest={sync.navigationStore.canSubmitTest()}
+              canSubmitTest={sync.sessionStore.canSubmitTest()}
               onQuestionChange={sync.handleQuestionChange}
               onShowSubmitModal={() => setShowSubmitModal(true)}
             />
@@ -85,9 +85,9 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
               onAnswerSelected={sync.handleAnswerSelected}
               onNext={sync.handleNext}
               onPrevious={sync.handlePrevious}
-              canGoNext={sync.navigationStore.canGoNext()}
-              canGoPrevious={sync.navigationStore.canGoPrevious()}
-              isLastQuestion={sync.navigationStore.isLastQuestion()}
+              canGoNext={sync.sessionStore.canGoNext()}
+              canGoPrevious={sync.sessionStore.canGoPrevious()}
+              isLastQuestion={sync.sessionStore.isLastQuestion()}
             />
           </div>
         </div>

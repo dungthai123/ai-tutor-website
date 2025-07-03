@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PracticeTopicModel } from '../../types';
 import { Button } from '@/shared/components/ui/buttons/Button';
-import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 
 interface QuestionHeaderProps {
   topicModel: PracticeTopicModel;
@@ -22,7 +22,7 @@ export function QuestionHeader({
     isTimerRunning,
     updateTimer,
     getProgress
-  } = usePracticeDetailStore();
+  } = useTestSessionStoreForReadingAndListening();
 
   const progress = getProgress();
 

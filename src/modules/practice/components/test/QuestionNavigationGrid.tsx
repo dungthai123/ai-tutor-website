@@ -1,6 +1,6 @@
 'use client';
 
-import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { cn } from '@/utils/helpers';
 import { QuizModel } from '../../types';
 
@@ -20,11 +20,11 @@ export function QuestionNavigationGrid({
   className 
 }: QuestionNavigationGridProps) {
   const {
-    questions,
-    setCurrentQuestion,
+    quizList: questions,
+    goToQuestion: setCurrentQuestion,
     markQuestionAsReviewed,
     getQuestionStatus,
-  } = useTestNavigationStore();
+  } = useTestSessionStoreForReadingAndListening();
 
   const handleQuestionClick = (index: number) => {
     setCurrentQuestion(index);

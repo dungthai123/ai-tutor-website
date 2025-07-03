@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { QuestionNavigationGrid } from './QuestionNavigationGrid';
 import { TestSubmissionModal } from './TestSubmissionModal';
@@ -19,8 +19,8 @@ export function TestNavigationPanel({
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   
   const {
-    currentQuestionIndex,
-    questions,
+    currentPosition: currentQuestionIndex,
+    quizList: questions,
     isNavigationPanelOpen,
     toggleNavigationPanel,
     getAnsweredCount,
@@ -30,8 +30,8 @@ export function TestNavigationPanel({
     submitTest,
     getNextUnansweredQuestion,
     getPreviousUnansweredQuestion,
-    setCurrentQuestion,
-  } = useTestNavigationStore();
+    goToQuestion: setCurrentQuestion,
+  } = useTestSessionStoreForReadingAndListening();
 
   const handleQuestionSelect = (questionIndex: number) => {
     onQuestionChange?.(questionIndex);

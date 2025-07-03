@@ -23,7 +23,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ListeningQuizModel, ListeningQuestionType } from '../../types';
 import { Button } from '@/shared/components/ui/buttons/Button';
-import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { SubtitlesSection } from '../shared/SubtitlesSection';
 import { AspectRatioImage } from '../shared/AspectRatioImage';
 import { getFontSizeClasses } from '../../utils';
@@ -58,7 +58,7 @@ export function ListeningQuestionContent({
     fontSize,
     toggleTranslation,
     toggleTranscript
-  } = usePracticeDetailStore();
+  } = useTestSessionStoreForReadingAndListening();
 
   const fontClasses = getFontSizeClasses(fontSize);
 

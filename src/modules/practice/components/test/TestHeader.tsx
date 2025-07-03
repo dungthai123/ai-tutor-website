@@ -1,5 +1,5 @@
 import { Button } from '@/shared/components/ui/buttons/Button';
-import { usePracticeDetailStore, FontSize } from '@/lib/stores/practiceDetailStore';
+import { useTestSessionStoreForReadingAndListening, FontSize } from '@/lib/stores/testSessionStoreForReadingAndListening';
 
 interface Topic {
   title: string;
@@ -12,7 +12,7 @@ interface TestHeaderProps {
 }
 
 export function TestHeader({ topic, onBack }: TestHeaderProps) {
-  const { fontSize, setFontSize } = usePracticeDetailStore();
+  const { fontSize, setFontSize } = useTestSessionStoreForReadingAndListening();
 
   const fontSizeButtons: { size: FontSize; label: string; icon: string }[] = [
     { size: 'small', label: 'Small', icon: '🔍' },

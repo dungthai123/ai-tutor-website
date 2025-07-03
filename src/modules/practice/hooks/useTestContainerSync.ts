@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { PracticeType } from '../types';
 import { UseTestSessionReturn } from '../types';
 
@@ -10,8 +10,8 @@ interface UseTestContainerSyncProps {
 }
 
 interface UseTestContainerSyncReturn {
-  // Navigation store integration
-  navigationStore: {
+  // Session store integration
+  sessionStore: {
     currentQuestionIndex: number;
     nextQuestion: () => void;
     previousQuestion: () => void;
@@ -22,8 +22,8 @@ interface UseTestContainerSyncReturn {
     getProgressPercentage: () => number;
     canSubmitTest: () => boolean;
     submitTest: () => Promise<void>;
-    setCurrentQuestion: (index: number) => void;
-    setAnswer: (questionIndex: number, answerIndex: number) => void;
+    goToQuestion: (index: number) => void;
+    setAnswerByIndex: (questionIndex: number, answerIndex: number) => void;
   };
   
   // Computed values
@@ -40,7 +40,7 @@ interface UseTestContainerSyncReturn {
 }
 
 /**
- * Custom hook to manage synchronization between test session and navigation store
+ * Custom hook to manage synchronization between test session and unified session store
  * Handles dual store updates and provides unified event handlers
  */
 export function useTestContainerSync({
@@ -50,69 +50,69 @@ export function useTestContainerSync({
 }: UseTestContainerSyncProps): UseTestContainerSyncReturn {
   const { state, actions } = testSession;
   
-  // Navigation store integration
-  const navigationStore = useTestNavigationStore();
+  // Session store integration
+  const sessionStore = useTestSessionStoreForReadingAndListening();
   const {
-    initializeTest: initNavigationTest,
-    setAnswer: setNavigationAnswer,
-    currentQuestionIndex: navigationCurrentIndex,
-    nextQuestion: navigationNext,
-    previousQuestion: navigationPrevious,
-    canGoNext: navigationCanGoNext,
-    canGoPrevious: navigationCanGoPrevious,
-    isLastQuestion: navigationIsLastQuestion,
+    initTest: initSessionTest,
+    setAnswerByIndex: setSessionAnswer,
+    currentPosition: sessionCurrentIndex,
+    nextQuestion: sessionNext,
+    previousQuestion: sessionPrevious,
+    canGoNext: sessionCanGoNext,
+    canGoPrevious: sessionCanGoPrevious,
+    isLastQuestion: sessionIsLastQuestion,
     getUnansweredCount,
     getProgressPercentage,
     canSubmitTest,
     submitTest,
-    setCurrentQuestion: setNavigationQuestion,
-  } = navigationStore;
+    goToQuestion: setSessionQuestion,
+  } = sessionStore;
 
   // Calculate derived values
   const answeredCount = Object.keys(state.selectedAnswers).length;
   const progressPercentage = getProgressPercentage();
   const unansweredCount = getUnansweredCount();
 
-  // Sync navigation store with test session state
+  // Sync session store with test session state
   useEffect(() => {
-    if (state.questions.length > 0 && !state.loading) {
-      initNavigationTest(testId, testType, state.questions);
+    if (state.questions.length > 0 && !state.loading && state.topic) {
+      initSessionTest(testId, testType, state.topic, state.questions);
     }
-  }, [state.questions, state.loading, testId, testType, initNavigationTest]);
+  }, [state.questions, state.loading, state.topic, testId, testType, initSessionTest]);
 
   // Sync current question between stores
   useEffect(() => {
-    if (navigationCurrentIndex !== state.currentPosition) {
-      actions.goToQuestion(navigationCurrentIndex);
+    if (sessionCurrentIndex !== state.currentPosition) {
+      actions.goToQuestion(sessionCurrentIndex);
     }
-  }, [navigationCurrentIndex, state.currentPosition, actions]);
+  }, [sessionCurrentIndex, state.currentPosition, actions]);
 
   // Sync answers between stores
   useEffect(() => {
     if (state.selectedAnswers[state.currentPosition] !== undefined) {
-      setNavigationAnswer(state.currentPosition, state.selectedAnswers[state.currentPosition]);
+      setSessionAnswer(state.currentPosition, state.selectedAnswers[state.currentPosition]);
     }
-  }, [state.selectedAnswers, state.currentPosition, setNavigationAnswer]);
+  }, [state.selectedAnswers, state.currentPosition, setSessionAnswer]);
 
   // Event handlers
   const handleQuestionChange = (questionIndex: number) => {
     actions.goToQuestion(questionIndex);
-    setNavigationQuestion(questionIndex);
+    setSessionQuestion(questionIndex);
   };
 
   const handleNext = () => {
-    navigationNext();
-    actions.goToQuestion(navigationCurrentIndex + 1);
+    sessionNext();
+    actions.goToQuestion(sessionCurrentIndex + 1);
   };
 
   const handlePrevious = () => {
-    navigationPrevious();
-    actions.goToQuestion(navigationCurrentIndex - 1);
+    sessionPrevious();
+    actions.goToQuestion(sessionCurrentIndex - 1);
   };
 
   const handleAnswerSelected = (answerIndex: number) => {
     actions.setAnswer(answerIndex);
-    setNavigationAnswer(state.currentPosition, answerIndex);
+    setSessionAnswer(state.currentPosition, answerIndex);
   };
 
   const handleSubmitTest = async () => {
@@ -120,19 +120,19 @@ export function useTestContainerSync({
   };
 
   return {
-    navigationStore: {
-      currentQuestionIndex: navigationCurrentIndex,
-      nextQuestion: navigationNext,
-      previousQuestion: navigationPrevious,
-      canGoNext: navigationCanGoNext,
-      canGoPrevious: navigationCanGoPrevious,
-      isLastQuestion: navigationIsLastQuestion,
+    sessionStore: {
+      currentQuestionIndex: sessionCurrentIndex,
+      nextQuestion: sessionNext,
+      previousQuestion: sessionPrevious,
+      canGoNext: sessionCanGoNext,
+      canGoPrevious: sessionCanGoPrevious,
+      isLastQuestion: sessionIsLastQuestion,
       getUnansweredCount,
       getProgressPercentage,
       canSubmitTest,
       submitTest,
-      setCurrentQuestion: setNavigationQuestion,
-      setAnswer: setNavigationAnswer,
+      goToQuestion: setSessionQuestion,
+      setAnswerByIndex: setSessionAnswer,
     },
     answeredCount,
     progressPercentage,

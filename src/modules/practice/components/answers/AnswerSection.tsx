@@ -16,7 +16,7 @@
  */
 
 import { QuizModel, TypeAnswer } from '../../types';
-import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
+import { useTestSessionStoreForReadingAndListening } from '@/lib/stores/testSessionStoreForReadingAndListening';
 import { getFontSizeClasses } from '../../utils';
 
 interface AnswerSectionProps {
@@ -34,7 +34,7 @@ export function AnswerSection({
   showFeedback = false,
   showTranslation = false 
 }: AnswerSectionProps) {
-  const { fontSize } = usePracticeDetailStore();
+  const { fontSize } = useTestSessionStoreForReadingAndListening();
   const fontClasses = getFontSizeClasses(fontSize);
   const correctAnswerIndex = parseInt(quizModel.correctAnswer) - 1;
 

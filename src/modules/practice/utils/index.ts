@@ -1,4 +1,4 @@
-import { FontSize } from '@/lib/stores/practiceDetailStore';
+import { FontSize } from '@/lib/stores/testSessionStoreForReadingAndListening';
 
 /**
  * Utility function to get the correct image URL for practice module
