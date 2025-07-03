@@ -1,8 +1,9 @@
 import { ListeningQuestionContent } from '../questions/ListeningQuestionContent';
 import { ReadingQuestionContent } from '../questions/ReadingQuestionContent';
+import { WritingQuestionContent } from '../questions/WritingQuestionContent';
 import { AnswerSection } from '../answers/AnswerSection';
 import { QuestionNavigation } from './QuestionNavigation';
-import { PracticeType, ListeningQuizModel, ReadingQuizModel, QuizModel } from '../../types';
+import { PracticeType, ListeningQuizModel, ReadingQuizModel, WritingQuizModel, QuizModel } from '../../types';
 
 interface TestContentAreaProps {
   testType: PracticeType;
@@ -45,9 +46,15 @@ export function TestContentArea({
               questionIndex={currentPosition}
               totalQuestions={totalQuestions}
             />
-          ) : (
+          ) : testType === PracticeType.READING ? (
             <ReadingQuestionContent
               quizModel={currentQuestion as ReadingQuizModel}
+              questionIndex={currentPosition}
+              totalQuestions={totalQuestions}
+            />
+          ) : (
+            <WritingQuestionContent
+              quizModel={currentQuestion as WritingQuizModel}
               questionIndex={currentPosition}
               totalQuestions={totalQuestions}
             />

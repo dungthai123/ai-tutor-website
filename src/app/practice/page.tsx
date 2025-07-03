@@ -49,6 +49,11 @@ export default function PracticePage() {
             selectedLevel={state.selectedLevel}
             topicCount={state.practiceTopics.length}
           />
+          <PracticeCard
+            practiceType={PracticeType.WRITING}
+            selectedLevel={state.selectedLevel}
+            topicCount={state.practiceTopics.length}
+          />
         </div>
       </div>
     </MainLayout>

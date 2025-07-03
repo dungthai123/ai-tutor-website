@@ -9,7 +9,9 @@ import {
   OptionModel,
   TypeAnswer,
   ReadingQuestionType,
-  ListeningQuestionType
+  ListeningQuestionType,
+  WritingQuizModel,
+  WritingQuestionType
 } from '../types';
 
 // API Response interfaces
@@ -71,6 +73,29 @@ interface ApiQuizQuestion {
   }>;
 }
 
+interface ApiWritingQuestion {
+  _id: string;
+  id: string;
+  hsk_test_id: string;
+  display_order: number;
+  context?: string | null;
+  answer_example?: string | null;
+  correct_answer: string;
+  image_url?: string | null;
+  image_description?: string | null;
+  instruction?: string | null;
+  ordering_items?: string[] | null;
+  required_words?: string[] | null;
+  prompt?: string | null;
+  question?: string | null;
+  type_practice: string;
+  type_of_question: string;
+  localized_content?: {
+    correctAnswer?: string;
+    answerExample?: string;
+  };
+}
+
 /**
  * API Service for Practice Module
  * Handles all external API calls for practice-related data
@@ -102,6 +127,11 @@ export class PracticeApiService {
         // Add reading test if it has reading questions
         if (test.total_reading_questions > 0) {
           transformedTests.push(this.transformHSKTest(test, PracticeType.READING));
+        }
+        
+        // Add writing test if it has writing questions
+        if (test.total_writing_questions > 0) {
+          transformedTests.push(this.transformHSKTest(test, PracticeType.WRITING));
         }
       });
 
@@ -155,6 +185,27 @@ export class PracticeApiService {
   }
 
   /**
+   * Get writing questions for a test
+   */
+  static async getWritingQuestions(testId: string): Promise<WritingQuizModel[]> {
+    try {
+      const response = await apiClient.get<{ success: boolean; data: ApiWritingQuestion[] }>(
+        `/api/v1/hsk-test-writing-questions/hsk-test/${testId}`
+      );
+      
+      if (!response.success || !Array.isArray(response.data)) {
+        console.warn('Invalid API response format for writing questions');
+        return [];
+      }
+
+      return response.data.map((question) => this.transformWritingQuizModel(question));
+    } catch (error) {
+      console.error('Failed to fetch writing questions:', error);
+      throw new Error('Failed to load writing questions. Please try again.');
+    }
+  }
+
+  /**
    * Submit test results (optional - implement if backend supports it)
    */
   static async submitTestResult(result: TestResult): Promise<void> {
@@ -187,11 +238,11 @@ export class PracticeApiService {
   private static transformHSKTest(rawData: ApiHSKTest, type: PracticeType): PracticeTopicModel {
     const questionCount = type === PracticeType.LISTENING 
       ? rawData.total_listening_questions 
-      : rawData.total_reading_questions;
+      : type === PracticeType.READING ? rawData.total_reading_questions : rawData.total_writing_questions;
       
     return {
       id: rawData._id,
-      title: `${rawData.title} (${type === PracticeType.LISTENING ? 'Listening' : 'Reading'})`,
+      title: `${rawData.title} (${type === PracticeType.LISTENING ? 'Listening' : type === PracticeType.READING ? 'Reading' : 'Writing'})`,
       displayOrder: rawData.display_order,
       level: rawData.level as HSKLevel,
       typePractice: type,
@@ -294,6 +345,33 @@ export class PracticeApiService {
   }
 
   /**
+   * Transform raw API data to WritingQuizModel
+   */
+  private static transformWritingQuizModel(rawData: ApiWritingQuestion): WritingQuizModel {
+    return {
+      id: rawData.id,
+      question: rawData.question || '',
+      correctAnswer: rawData.correct_answer,
+      optionList: [], // Writing questions typically don't have multiple choice options
+      typeAnswer: TypeAnswer.QUESTION_ANSWER, // Default for writing questions
+      explanation: rawData.localized_content?.correctAnswer || undefined,
+      readingTranslation: undefined, // Not applicable for writing
+      correctAnswerTranslation: rawData.localized_content?.correctAnswer || undefined,
+      optionListText: undefined, // Not applicable for writing
+      type: PracticeType.WRITING,
+      questionType: this.detectWritingQuestionType(rawData),
+      orderingItems: rawData.ordering_items || undefined,
+      requiredWords: rawData.required_words || undefined,
+      prompt: rawData.prompt || undefined,
+      context: rawData.context || undefined,
+      answerExample: rawData.answer_example || undefined,
+      imageUrl: rawData.image_url || undefined,
+      imageDescription: rawData.image_description || undefined,
+      instruction: rawData.instruction || undefined,
+    };
+  }
+
+  /**
    * Detect listening question type based on API data
    */
   private static detectListeningQuestionType(rawData: ApiQuizQuestion): ListeningQuestionType | undefined {
@@ -364,6 +442,34 @@ export class PracticeApiService {
       return ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT;
     }
 
+    return undefined; // Let it default to normal question
+  }
+
+  /**
+   * Detect writing question type based on API data
+   */
+  private static detectWritingQuestionType(rawData: ApiWritingQuestion): WritingQuestionType | undefined {
+    // Use type_of_question field from API if available
+    if (rawData.type_of_question) {
+      const typeMap: Record<string, WritingQuestionType> = {
+        'Write_Ordering': WritingQuestionType.WRITE_ORDERING,
+        'Write_SentencefromImage': WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE,
+        'Write_Completion': WritingQuestionType.WRITE_COMPLETION,
+        'Write_Essay': WritingQuestionType.WRITE_ESSAY,
+      };
+      
+      return typeMap[rawData.type_of_question];
+    }
+
+    // Fallback to heuristic detection
+    if (rawData.ordering_items && rawData.ordering_items.length > 0) {
+      return WritingQuestionType.WRITE_ORDERING;
+    }
+    
+    if (rawData.image_url) {
+      return WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE;
+    }
+    
     return undefined; // Let it default to normal question
   }
 

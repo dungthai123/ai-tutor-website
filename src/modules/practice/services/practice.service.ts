@@ -26,10 +26,12 @@ export class PracticeService {
       
       const listening = allTopics.filter(topic => topic.type === PracticeType.LISTENING);
       const reading = allTopics.filter(topic => topic.type === PracticeType.READING);
+      const writing = allTopics.filter(topic => topic.type === PracticeType.WRITING);
       
       return {
         listening,
         reading,
+        writing,
         total: allTopics.length
       };
     } catch (error) {
@@ -37,6 +39,7 @@ export class PracticeService {
       return {
         listening: [],
         reading: [],
+        writing: [],
         total: 0
       };
     }
@@ -78,6 +81,10 @@ export class PracticeService {
         console.log('📖 Fetching reading questions...');
         questions = await PracticeApiService.getReadingQuestions(testId);
         console.log(`📖 Received ${questions.length} reading questions`);
+      } else if (testType === PracticeType.WRITING) {
+        console.log('✍️ Fetching writing questions...');
+        questions = await PracticeApiService.getWritingQuestions(testId);
+        console.log(`✍️ Received ${questions.length} writing questions`);
       }
 
       console.log('🔍 Questions fetched:', questions.length, 'First question:', questions[0]);
@@ -140,7 +147,7 @@ export class PracticeService {
       totalQuestions: questionCount,
       totalListeningQuestions: testType === PracticeType.LISTENING ? questionCount : 0,
       totalReadingQuestions: testType === PracticeType.READING ? questionCount : 0,
-      totalWritingQuestions: 0,
+      totalWritingQuestions: testType === PracticeType.WRITING ? questionCount : 0,
       type: testType,
       description: `Practice test with ${questionCount} questions`,
       difficulty: 'medium',

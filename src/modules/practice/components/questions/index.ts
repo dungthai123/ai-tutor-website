@@ -2,3 +2,4 @@
 export { QuestionHeader } from './QuestionHeader';
 export { ListeningQuestionContent } from './ListeningQuestionContent'; 
 export { ReadingQuestionContent } from './ReadingQuestionContent'; 
+export { WritingQuestionContent } from './WritingQuestionContent'; 

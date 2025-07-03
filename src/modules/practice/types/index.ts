@@ -59,6 +59,20 @@ export interface ReadingQuizModel extends BaseQuizModel {
   imageList?: string[]; // Context images for picture matching questions
 }
 
+// Writing Quiz Model (extends BaseQuizModel)
+export interface WritingQuizModel extends BaseQuizModel {
+  type: PracticeType.WRITING;
+  questionType?: WritingQuestionType;
+  orderingItems?: string[]; // For Write_Ordering questions
+  requiredWords?: string[]; // For questions that require specific words
+  prompt?: string; // Writing prompt
+  context?: string; // Additional context
+  answerExample?: string; // Example answer
+  imageUrl?: string; // Main question image for Write_SentencefromImage
+  imageDescription?: string; // Description of the image
+  instruction?: string; // Special instructions for the question
+}
+
 // Answer Options
 export interface OptionModel {
   id: string;
@@ -116,7 +130,7 @@ export interface QuestionResult {
 }
 
 // Union type for Quiz Models
-export type QuizModel = ListeningQuizModel | ReadingQuizModel;
+export type QuizModel = ListeningQuizModel | ReadingQuizModel | WritingQuizModel;
 
 export interface QuizState {
   quizList: QuizModel[];
@@ -203,6 +217,14 @@ export enum ListeningQuestionType {
   NORMAL = 'normal'
 }
 
+export enum WritingQuestionType {
+  WRITE_ORDERING = 'Write_Ordering',
+  WRITE_SENTENCE_FROM_IMAGE = 'Write_SentencefromImage',
+  WRITE_COMPLETION = 'Write_Completion',
+  WRITE_ESSAY = 'Write_Essay',
+  NORMAL = 'normal'
+}
+
 // Page Component Props
 export interface PracticePageProps {
   initialLevel?: HSKLevel;
@@ -285,6 +307,7 @@ export interface TestSessionState {
 export interface PracticeTopicsResponse {
   listening: PracticeTopicModel[];
   reading: PracticeTopicModel[];
+  writing: PracticeTopicModel[];
   total: number;
 }
 
@@ -371,6 +394,17 @@ export const PRACTICE_TYPE_INFO = {
       'Reading comprehension passages',
       'True/false and multiple choice',
       'Vocabulary and grammar focus'
+    ]
+  },
+  [PracticeType.WRITING]: {
+    title: 'Writing Practice',
+    description: 'Improve writing skills with various writing exercises and prompts.',
+    icon: '📝',
+    color: 'bg-red-600',
+    hoverColor: 'hover:bg-red-700',
+    features: [
+      'Writing exercises and prompts',
+      'Grammar and vocabulary practice'
     ]
   }
 }; 
