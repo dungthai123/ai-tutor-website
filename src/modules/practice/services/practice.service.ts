@@ -172,36 +172,63 @@ export class PracticeService {
       // Basic required fields
       const hasId = question.id && question.id.trim() !== '';
       const hasCorrectAnswer = question.correctAnswer && question.correctAnswer.trim() !== '';
-      const hasValidOptions = Array.isArray(question.optionList) && question.optionList.length > 0;
       
-      // Question text can be empty for audio-only questions, but we need either question text or audio
-      const hasQuestionContent = (question.question && question.question.trim() !== '') ||
-        ('audio' in question && question.audio && question.audio.trim() !== '') ||
-        ('passage' in question && question.passage && question.passage.trim() !== '');
-      
-      // Options should have valid structure
-      const hasValidOptionStructure = question.optionList.every(option => 
-        option && typeof option === 'object' && 
-        option.text && option.text.trim() !== ''
-      );
-      
-      const isValid = hasId && hasCorrectAnswer && hasValidOptions && hasQuestionContent && hasValidOptionStructure;
-      
-      if (!isValid) {
-        console.warn(`Question ${index} validation failed:`, {
-          id: question.id,
-          hasId,
-          hasQuestionContent,
-          hasCorrectAnswer,
-          hasValidOptions,
-          hasValidOptionStructure,
-          optionListLength: question.optionList?.length || 0,
-          questionType: question.type || 'unknown',
-          question: question
-        });
+      // Writing questions have different validation requirements
+      if (question.type === PracticeType.WRITING) {
+        // For writing questions, we don't require optionList as they might be ordering or open-ended
+        const hasWritingContent = 
+          (question.question && question.question.trim() !== '') ||
+          ('orderingItems' in question && question.orderingItems && question.orderingItems.length > 0) ||
+          ('imageUrl' in question && question.imageUrl && question.imageUrl.trim() !== '') ||
+          ('prompt' in question && question.prompt && question.prompt.trim() !== '');
+        
+        const isValid = hasId && hasCorrectAnswer && hasWritingContent;
+        
+        if (!isValid) {
+          console.warn(`Writing question ${index} validation failed:`, {
+            id: question.id,
+            hasId,
+            hasCorrectAnswer,
+            hasWritingContent,
+            questionType: question.type || 'unknown',
+            question: question
+          });
+        }
+        
+        return !isValid;
+      } else {
+        // For listening and reading questions, use original validation logic
+        const hasValidOptions = Array.isArray(question.optionList) && question.optionList.length > 0;
+        
+        // Question text can be empty for audio-only questions, but we need either question text or audio
+        const hasQuestionContent = (question.question && question.question.trim() !== '') ||
+          ('audio' in question && question.audio && question.audio.trim() !== '') ||
+          ('passage' in question && question.passage && question.passage.trim() !== '');
+        
+        // Options should have valid structure
+        const hasValidOptionStructure = question.optionList.every(option => 
+          option && typeof option === 'object' && 
+          option.text && option.text.trim() !== ''
+        );
+        
+        const isValid = hasId && hasCorrectAnswer && hasValidOptions && hasQuestionContent && hasValidOptionStructure;
+        
+        if (!isValid) {
+          console.warn(`Question ${index} validation failed:`, {
+            id: question.id,
+            hasId,
+            hasQuestionContent,
+            hasCorrectAnswer,
+            hasValidOptions,
+            hasValidOptionStructure,
+            optionListLength: question.optionList?.length || 0,
+            questionType: question.type || 'unknown',
+            question: question
+          });
+        }
+        
+        return !isValid;
       }
-      
-      return !isValid;
     });
 
     if (invalidQuestions.length > 0) {

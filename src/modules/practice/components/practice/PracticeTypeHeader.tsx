@@ -23,12 +23,20 @@ export function PracticeTypeHeader({ practiceType, level }: PracticeTypeHeaderPr
         description: 'Practice listening comprehension with audio exercises',
         color: 'bg-blue-500'
       };
-    } else {
+    }
+    else if (practiceType === PracticeType.READING) {
       return {
         title: 'Reading Practice',
         icon: '📖',
         description: 'Improve reading comprehension with text exercises',
         color: 'bg-green-500'
+      };
+    } else {
+      return {
+        title: 'Writing Practice',
+        icon: '📝',
+        description: 'Improve writing skills with text exercises',
+        color: 'bg-purple-500'
       };
     }
   };
