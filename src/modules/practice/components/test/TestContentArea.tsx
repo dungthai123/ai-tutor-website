@@ -10,8 +10,8 @@ interface TestContentAreaProps {
   currentQuestion: QuizModel;
   currentPosition: number;
   totalQuestions: number;
-  selectedAnswer: number | undefined;
-  onAnswerSelected: (answerIndex: number) => void;
+  selectedAnswer: number | string | undefined;
+  onAnswerSelected: (answer: number | string) => void;
   // Navigation props
   onNext: () => void;
   onPrevious: () => void;
@@ -57,16 +57,20 @@ export function TestContentArea({
               quizModel={currentQuestion as WritingQuizModel}
               questionIndex={currentPosition}
               totalQuestions={totalQuestions}
+              onAnswerSelected={onAnswerSelected}
+              selectedAnswer={selectedAnswer}
             />
           )}
-          {/* Answer Section */}
-          <AnswerSection
-            quizModel={currentQuestion}
-            onAnswerSelected={onAnswerSelected}
-            selectedAnswer={selectedAnswer}
-            showFeedback={false}
-            showTranslation={false}
-          />
+          {/* Answer Section is not needed for writing questions */}
+          {testType !== PracticeType.WRITING && (
+            <AnswerSection
+              quizModel={currentQuestion}
+              onAnswerSelected={onAnswerSelected}
+              selectedAnswer={selectedAnswer as number | undefined}
+              showFeedback={false}
+              showTranslation={false}
+            />
+          )}
         </div>
       </div>
 

@@ -6,7 +6,7 @@ export function useTestLogic(testType: PracticeType, testId: string) {
   const [questions, setQuestions] = useState<QuizModel[]>([]);
   const [topic, setTopic] = useState<PracticeTopicModel | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,10 +29,10 @@ export function useTestLogic(testType: PracticeType, testId: string) {
     loadTestData();
   }, [testId, testType]);
 
-  const handleAnswerSelect = (answerIndex: number) => {
+  const handleAnswerSelect = (answer: number | string) => {
     setSelectedAnswers(prev => ({
       ...prev,
-      [currentIndex]: answerIndex
+      [currentIndex]: answer
     }));
   };
 

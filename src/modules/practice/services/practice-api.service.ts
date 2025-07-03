@@ -456,6 +456,9 @@ export class PracticeApiService {
         'Write_SentencefromImage': WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE,
         'Write_Completion': WritingQuestionType.WRITE_COMPLETION,
         'Write_Essay': WritingQuestionType.WRITE_ESSAY,
+        'Write_PassagefromVocabs': WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS,
+        'Write_PassagefromPictures': WritingQuestionType.WRITE_PASSAGE_FROM_PICTURES,
+        'Write_SummarizePassage': WritingQuestionType.WRITE_SUMMARIZE_PASSAGE
       };
       
       return typeMap[rawData.type_of_question];
@@ -468,6 +471,18 @@ export class PracticeApiService {
     
     if (rawData.image_url) {
       return WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE;
+    }
+    
+    if (rawData.required_words && rawData.required_words.length > 0) {
+      return WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS;
+    }
+    
+    if (rawData.prompt && (rawData.prompt.includes('picture') || rawData.prompt.includes('image'))) {
+      return WritingQuestionType.WRITE_PASSAGE_FROM_PICTURES;
+    }
+    
+    if (rawData.context && rawData.context.length > 100) {
+      return WritingQuestionType.WRITE_SUMMARIZE_PASSAGE;
     }
     
     return undefined; // Let it default to normal question

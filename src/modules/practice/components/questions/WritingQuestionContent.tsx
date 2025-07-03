@@ -9,12 +9,16 @@
  * Supported Question Types:
  * - WRITE_ORDERING: Sentence ordering tasks
  * - WRITE_SENTENCE_FROM_IMAGE: Write sentences based on images
+ * - WRITE_PASSAGE_FROM_VOCABS: Write a passage from vocabulary
+ * - WRITE_PASSAGE_FROM_PICTURES: Write a passage from pictures
+ * - WRITE_SUMMARIZE_PASSAGE: Summarize a passage
  * - Default: Falls back to general writing question handler
  */
 
 import { WritingQuizModel, WritingQuestionType } from '../../types';
 import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
 import { getFontSizeClasses } from '../../utils';
+import { WritingAnswerInput } from './writing/WritingAnswerInput';
 
 // Import specific question type components
 import { 
@@ -27,11 +31,15 @@ interface WritingQuestionContentProps {
   quizModel: WritingQuizModel;
   questionIndex: number;
   totalQuestions: number;
+  onAnswerSelected: (answer: number | string) => void;
+  selectedAnswer?: number | string;
 }
 
 export function WritingQuestionContent({ 
   quizModel, 
-  questionIndex 
+  questionIndex,
+  onAnswerSelected,
+  selectedAnswer
 }: WritingQuestionContentProps) {
   const {
     isShowTranslation,
@@ -47,7 +55,9 @@ export function WritingQuestionContent({
       quizModel,
       isShowTranslation,
       isShowExplanation,
-      fontClasses
+      fontClasses,
+      onAnswerChange: onAnswerSelected,
+      currentAnswer: selectedAnswer as string | undefined
     };
 
     switch (quizModel.questionType) {
@@ -55,6 +65,10 @@ export function WritingQuestionContent({
         return <WriteOrderingQuestion {...questionProps} />;
       case WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE:
         return <WriteSentenceFromImageQuestion {...questionProps} />;
+      case WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS:
+      case WritingQuestionType.WRITE_PASSAGE_FROM_PICTURES:
+      case WritingQuestionType.WRITE_SUMMARIZE_PASSAGE:
+        return <DefaultWritingQuestion {...questionProps} />;
       default:
         return <DefaultWritingQuestion {...questionProps} />;
     }
@@ -74,12 +88,24 @@ export function WritingQuestionContent({
         <div className="text-sm text-gray-600 mb-4">
           {quizModel.questionType === WritingQuestionType.WRITE_ORDERING && 'Word Ordering'}
           {quizModel.questionType === WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE && 'Sentence from Image'}
+          {quizModel.questionType === WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS && 'Passage from Vocabulary'}
+          {quizModel.questionType === WritingQuestionType.WRITE_PASSAGE_FROM_PICTURES && 'Passage from Pictures'}
+          {quizModel.questionType === WritingQuestionType.WRITE_SUMMARIZE_PASSAGE && 'Summarize Passage'}
           {!quizModel.questionType && 'Writing Exercise'}
         </div>
       </div>
 
       {/* Render question content based on type */}
       {renderByQuestionType()}
+
+      <div className="mt-6">
+        <WritingAnswerInput 
+          key={quizModel.id}
+          quizModel={quizModel} 
+          onAnswerChange={onAnswerSelected} 
+          currentAnswer={selectedAnswer as string | undefined} 
+        />
+      </div>
     </div>
   );
 } 

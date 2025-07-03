@@ -245,7 +245,7 @@ export class PracticeService {
    */
   static calculateScore(
     questions: QuizModel[],
-    selectedAnswers: Record<number, number>
+    selectedAnswers: Record<number, number | string>
   ): TestScore {
     let correct = 0;
     let wrong = 0;
@@ -256,8 +256,31 @@ export class PracticeService {
       
       if (selectedAnswer === undefined) {
         skip++;
-      } else {
-        const correctAnswerIndex = parseInt(question.correctAnswer) - 1;
+        return;
+      }
+      
+      // Handle writing questions
+      if (question.type === PracticeType.WRITING) {
+        if (typeof selectedAnswer === 'string') {
+          // For ordering questions, we can do a direct comparison
+          if (question.questionType === 'Write_Ordering') {
+            if (selectedAnswer.trim() === question.correctAnswer.trim()) {
+              correct++;
+            } else {
+              wrong++;
+            }
+          } else {
+            // For free-form writing, we mark as answered but don't score it.
+            // It will be counted as 'skip' for scoring purposes, but not in progress tracking.
+            skip++;
+          }
+        }
+        return;
+      }
+      
+      // Handle multiple-choice questions (listening/reading)
+      if (typeof selectedAnswer === 'number') {
+        const correctAnswerIndex = parseInt(question.correctAnswer, 10) - 1;
         if (selectedAnswer === correctAnswerIndex) {
           correct++;
         } else {

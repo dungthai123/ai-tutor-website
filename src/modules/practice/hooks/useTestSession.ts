@@ -83,27 +83,29 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
   }, [testId, testType]);
 
   // Set answer for current question
-  const setAnswer = useCallback((answerIndex: number) => {
+  const setAnswer = useCallback((answer: number | string) => {
     setState(prev => {
       const currentQuestion = prev.questions[prev.currentPosition];
       if (!currentQuestion) return prev;
 
-      // Validate answer
-      const validation = ValidationService.validateAnswerSelection(
-        answerIndex, 
-        currentQuestion.optionList.length
-      );
-      
-      if (!validation.valid) {
-        console.warn(validation.error);
-        return prev;
+      // For multiple-choice questions, validate the answer index
+      if (typeof answer === 'number') {
+        const validation = ValidationService.validateAnswerSelection(
+          answer, 
+          currentQuestion.optionList.length
+        );
+        
+        if (!validation.valid) {
+          console.warn(validation.error);
+          return prev;
+        }
       }
 
       return {
         ...prev,
         selectedAnswers: {
           ...prev.selectedAnswers,
-          [prev.currentPosition]: answerIndex
+          [prev.currentPosition]: answer
         }
       };
     });

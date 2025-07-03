@@ -123,7 +123,7 @@ export interface TestResult {
 
 export interface QuestionResult {
   questionId: string;
-  selectedAnswer?: number;
+  selectedAnswer?: number | string;
   correctAnswer: number;
   isCorrect: boolean;
   timeSpent: number;
@@ -222,7 +222,9 @@ export enum WritingQuestionType {
   WRITE_SENTENCE_FROM_IMAGE = 'Write_SentencefromImage',
   WRITE_COMPLETION = 'Write_Completion',
   WRITE_ESSAY = 'Write_Essay',
-  NORMAL = 'normal'
+  WRITE_PASSAGE_FROM_VOCABS = 'Write_PassagefromVocabs',
+  WRITE_PASSAGE_FROM_PICTURES = 'Write_PassagefromPictures',
+  WRITE_SUMMARIZE_PASSAGE = 'Write_SummarizePassage'
 }
 
 // Page Component Props
@@ -294,7 +296,7 @@ export interface TestSessionState {
   topic: PracticeTopicModel | null;
   questions: QuizModel[];
   currentPosition: number;
-  selectedAnswers: Record<number, number>;
+  selectedAnswers: Record<number, number | string>;
   timeStarted: number;
   timeElapsed: number;
   isCompleted: boolean;
@@ -329,7 +331,7 @@ export interface UsePracticePageReturn {
 export interface UseTestSessionReturn {
   state: TestSessionState;
   actions: {
-    setAnswer: (answerIndex: number) => void;
+    setAnswer: (answer: number | string) => void;
     nextQuestion: () => void;
     previousQuestion: () => void;
     goToQuestion: (index: number) => void;
