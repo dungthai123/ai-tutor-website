@@ -53,19 +53,10 @@ export function TestResults({
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-4">
-            <span className="text-sm text-gray-600">Test Completed</span>
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-          </div>
-        </div>
-
         {/* Main Results Card */}
         <Card className="max-w-2xl mx-auto p-8 text-center shadow-xl border-0 bg-white/90 backdrop-blur-sm">
           {/* Character and Stars */}
           <div className="mb-6">
-            <div className="text-8xl mb-4">🐼</div>
             <div className="flex justify-center gap-1 mb-4">
               {renderStars(performance.stars)}
             </div>
@@ -76,13 +67,23 @@ export function TestResults({
             Hoàn thành bài kiểm tra!
           </h1>
           
-          <p className="text-gray-600 mb-2">
-            Chúc mừng bạn đã vượt qua bài kiểm tra.
-          </p>
-          <p className="text-sm text-gray-500 mb-8">
-            Để biết đáp án chi tiết, hãy bấm vào Xem đáp án nhé.
-          </p>
-
+        {/* Additional Stats Card */}
+        <Card className="max-w-md mx-auto p-4 bg-white/80 backdrop-blur-sm">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{score.correct}</div>
+              <div className="text-xs text-gray-600">Correct</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-red-600">{score.wrong}</div>
+              <div className="text-xs text-gray-600">Wrong</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-600">{score.skip}</div>
+              <div className="text-xs text-gray-600">Skipped</div>
+            </div>
+          </div>
+        </Card>
           {/* Score Display */}
           <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full ${performance.bgColor} mb-8`}>
             <span className={`text-2xl font-bold ${performance.color}`}>
@@ -124,21 +125,6 @@ export function TestResults({
                 </div>
               </div>
             )}
-
-            {/* Writing Score (placeholder) */}
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-1">Viết</div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {Math.floor(score.percentage * 0.16)} / 100
-              </div>
-                             <Button
-                 variant="secondary"
-                 onClick={onViewAnswers}
-                 className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1"
-               >
-                 Xem đáp án
-               </Button>
-             </div>
           </div>
 
           {/* Performance Message */}
@@ -192,23 +178,7 @@ export function TestResults({
           </div>
         </Card>
 
-        {/* Additional Stats Card */}
-        <Card className="max-w-md mx-auto mt-6 p-4 bg-white/80 backdrop-blur-sm">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-green-600">{score.correct}</div>
-              <div className="text-xs text-gray-600">Correct</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-red-600">{score.wrong}</div>
-              <div className="text-xs text-gray-600">Wrong</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-600">{score.skip}</div>
-              <div className="text-xs text-gray-600">Skipped</div>
-            </div>
-          </div>
-        </Card>
+
       </div>
     </div>
   );

@@ -54,18 +54,6 @@ export function WriteSentenceFromImageQuestion({
         </div>
       )}
 
-      {/* Show correct answer if available */}
-      {quizModel.correctAnswer && (
-        <div className="mb-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-          <h5 className="font-semibold text-green-800 mb-2">📝 Model Answer:</h5>
-          <TextAndTranslate 
-            text={quizModel.correctAnswer}
-            translation={quizModel.correctAnswerTranslation}
-            isShowTranslation={isShowTranslation}
-            fontClasses={fontClasses}
-          />
-        </div>
-      )}
     </div>
   );
 } 

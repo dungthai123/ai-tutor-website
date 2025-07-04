@@ -24,6 +24,12 @@ const sidebarItems: SidebarItem[] = [
     label: 'HSK Practice',
     href: '/practice',
     icon: '📚'
+  },
+  {
+    id: 'test-history',
+    label: 'Test History',
+    href: '/history',
+    icon: '🕑'
   }
 ];
 

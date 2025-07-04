@@ -227,6 +227,28 @@ export enum WritingQuestionType {
   WRITE_SUMMARIZE_PASSAGE = 'Write_SummarizePassage'
 }
 
+// AI Scoring Types
+export interface WritingScore {
+  score: number; // Score out of 10
+  feedback: string; // Detailed feedback
+  corrected_text: string; // Corrected version
+  suggestions: string; // Suggestions for improvement
+  confidence_level: 'high' | 'medium' | 'low'; // AI confidence level
+}
+
+export interface WritingScoringRequest {
+  questionType: WritingQuestionType;
+  task: string;
+  userAnswer: string;
+  questionData?: {
+    imageUrl?: string;
+    prompt?: string;
+    context?: string;
+    requiredWords?: string[];
+    instruction?: string;
+  };
+}
+
 // Page Component Props
 export interface PracticePageProps {
   initialLevel?: HSKLevel;
@@ -409,4 +431,17 @@ export const PRACTICE_TYPE_INFO = {
       'Grammar and vocabulary practice'
     ]
   }
-}; 
+};
+
+// Test History Item (for local storage persistence)
+export interface TestHistoryItem {
+  historyId: string; // unique per history entry
+  testId: string;
+  testType: PracticeType;
+  completedAt: string; // ISO timestamp
+  topic: PracticeTopicModel;
+  questions: QuizModel[];
+  selectedAnswers: Record<number, number | string>;
+  score: TestScore;
+  level: HSKLevel;
+} 

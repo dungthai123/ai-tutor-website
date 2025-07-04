@@ -35,7 +35,7 @@ interface UseTestContainerSyncReturn {
   handleQuestionChange: (questionIndex: number) => void;
   handleNext: () => void;
   handlePrevious: () => void;
-  handleAnswerSelected: (answerIndex: number) => void;
+  handleAnswerSelected: (answer: number | string) => void;
   handleSubmitTest: () => Promise<void>;
 }
 
@@ -89,8 +89,12 @@ export function useTestContainerSync({
 
   // Sync answers between stores
   useEffect(() => {
-    if (state.selectedAnswers[state.currentPosition] !== undefined) {
-      setNavigationAnswer(state.currentPosition, state.selectedAnswers[state.currentPosition]);
+    const ans = state.selectedAnswers[state.currentPosition];
+    if (ans !== undefined) {
+      const ansNumber = typeof ans === 'string' ? parseInt(ans, 10) : ans;
+      if (!isNaN(ansNumber)) {
+        setNavigationAnswer(state.currentPosition, ansNumber);
+      }
     }
   }, [state.selectedAnswers, state.currentPosition, setNavigationAnswer]);
 
@@ -110,9 +114,14 @@ export function useTestContainerSync({
     actions.goToQuestion(navigationCurrentIndex - 1);
   };
 
-  const handleAnswerSelected = (answerIndex: number) => {
-    actions.setAnswer(answerIndex);
-    setNavigationAnswer(state.currentPosition, answerIndex);
+  const handleAnswerSelected = (answer: number | string) => {
+    // Convert string to number if needed (for numeric answers)
+    const answerIndex = typeof answer === 'string' ? parseInt(answer, 10) : answer;
+    actions.setAnswer(answer);
+    // For navigation store, ensure we pass number
+    if (!isNaN(answerIndex)) {
+      setNavigationAnswer(state.currentPosition, answerIndex);
+    }
   };
 
   const handleSubmitTest = async () => {

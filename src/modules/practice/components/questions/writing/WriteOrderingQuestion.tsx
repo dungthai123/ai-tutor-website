@@ -1,10 +1,8 @@
 import { WritingQuestionProps } from './types';
-import { TextAndTranslate } from '../../shared/TextAndTranslate';
 
 export function WriteOrderingQuestion({ 
   quizModel, 
-  isShowTranslation,
-  fontClasses 
+
 }: WritingQuestionProps) {
   return (
     <div className="write-ordering-question">
@@ -33,18 +31,6 @@ export function WriteOrderingQuestion({
         </div>
       )}
 
-      {/* Show correct answer as example if available */}
-      {quizModel.correctAnswer && (
-        <div className="mb-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-          <h5 className="font-semibold text-green-800 mb-2">📝 Correct Answer:</h5>
-          <TextAndTranslate 
-            text={quizModel.correctAnswer}
-            translation={quizModel.correctAnswerTranslation}
-            isShowTranslation={isShowTranslation}
-            fontClasses={fontClasses}
-          />
-        </div>
-      )}
 
       {/* Show answer example if available */}
       {quizModel.answerExample && (

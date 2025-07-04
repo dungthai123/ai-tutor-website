@@ -14,4 +14,7 @@ export * from './questions';
 export * from './answers';
 
 // Common UI Components
-export * from './ui'; 
+export * from './ui';
+
+// History Components
+export * from './history'; 

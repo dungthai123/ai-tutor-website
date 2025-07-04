@@ -1,4 +1,5 @@
 import { getImageUrl, isValidImageUrl } from '../../utils';
+import Image from 'next/image';
 
 interface ImageGridProps {
   images: string[];
@@ -26,14 +27,10 @@ export function ImageGrid({
             }`}
             onClick={() => onImageClick?.(index)}
           >
-            <img
+            <Image
               src={getImageUrl(imageUrl)}
               alt={`Option ${String.fromCharCode(65 + index)}`}
               className="w-full h-32 object-cover rounded-lg border border-gray-200 group-hover:border-blue-300 transition-all duration-200 shadow-sm"
-              onError={(e) => {
-                console.error('Failed to load image:', imageUrl);
-                e.currentTarget.style.display = 'none';
-              }}
             />
             <div className="image-label absolute top-2 left-2 bg-blue-600 text-white text-sm font-bold px-2 py-1 rounded-full shadow">
               {String.fromCharCode(65 + index)}

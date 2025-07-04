@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PracticeType } from '../types';
 import { PracticeService, TimerService, ValidationService } from '../services';
+import { HistoryService } from '../services/history.service';
+import { TestHistoryItem } from '../types';
 import { UseTestSessionReturn, TestSessionState } from '../types';
 
 /**
@@ -21,6 +23,9 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
     loading: true,
     error: null
   });
+
+  // Ref to ensure we persist history only once per test session
+  const historySavedRef = useRef(false);
 
   // Initialize test session
   const initializeTest = useCallback(async () => {
@@ -90,14 +95,14 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
 
       // For multiple-choice questions, validate the answer index
       if (typeof answer === 'number') {
-        const validation = ValidationService.validateAnswerSelection(
+      const validation = ValidationService.validateAnswerSelection(
           answer, 
-          currentQuestion.optionList.length
-        );
-        
-        if (!validation.valid) {
-          console.warn(validation.error);
-          return prev;
+        currentQuestion.optionList.length
+      );
+      
+      if (!validation.valid) {
+        console.warn(validation.error);
+        return prev;
         }
       }
 
@@ -161,6 +166,23 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
     // Stop timer
     const sessionId = `${currentState.testType}-${currentState.testId}`;
     TimerService.stopTimer(sessionId);
+
+    // Persist to local storage
+    if (!historySavedRef.current) {
+      const historyItem: TestHistoryItem = {
+        historyId: `${currentState.testId}-${Date.now()}`,
+        testId: currentState.testId,
+        testType: currentState.testType,
+        completedAt: new Date().toISOString(),
+        topic: currentState.topic!,
+        questions: currentState.questions,
+        selectedAnswers: currentState.selectedAnswers,
+        score,
+        level: currentState.topic!.level,
+      };
+      HistoryService.saveTestToHistory(historyItem);
+      historySavedRef.current = true;
+    }
 
     return {
       ...currentState,

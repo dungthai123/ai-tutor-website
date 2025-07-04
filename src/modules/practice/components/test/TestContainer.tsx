@@ -55,8 +55,6 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
       <div className="min-h-screen bg-gray-50">
         {/* Header with back button and topic info */}
         <TestHeader
-          topic={state.topic!}
-          onBack={onBack}
         />
 
         {/* Main Content Layout */}
@@ -64,6 +62,9 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
           {/* Left Side - Navigation Panel (Fixed Width) */}
           <div className="flex-shrink-0 w-80">
             <TestNavigationSidebar
+              topic={state.topic}
+              timeElapsed={state.timeElapsed}
+              onExit={onBack}
               progressPercentage={sync.progressPercentage}
               answeredCount={sync.answeredCount}
               unansweredCount={sync.unansweredCount}

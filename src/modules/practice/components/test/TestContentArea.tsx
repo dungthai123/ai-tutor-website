@@ -63,13 +63,13 @@ export function TestContentArea({
           )}
           {/* Answer Section is not needed for writing questions */}
           {testType !== PracticeType.WRITING && (
-            <AnswerSection
-              quizModel={currentQuestion}
-              onAnswerSelected={onAnswerSelected}
+          <AnswerSection
+            quizModel={currentQuestion}
+            onAnswerSelected={onAnswerSelected}
               selectedAnswer={selectedAnswer as number | undefined}
-              showFeedback={false}
-              showTranslation={false}
-            />
+            showFeedback={false}
+            showTranslation={false}
+          />
           )}
         </div>
       </div>

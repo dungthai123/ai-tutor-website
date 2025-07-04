@@ -7,7 +7,7 @@ export interface QuestionStatus {
   isAnswered: boolean;
   isCurrent: boolean;
   isReviewed: boolean;
-  selectedAnswer?: number;
+  selectedAnswer?: number | string;
 }
 
 export interface TestNavigationState {
@@ -16,7 +16,7 @@ export interface TestNavigationState {
   testType: PracticeType | null;
   questions: QuizModel[];
   currentQuestionIndex: number;
-  selectedAnswers: Record<number, number>;
+  selectedAnswers: Record<number, number | string>;
   
   // Navigation state
   isNavigationPanelOpen: boolean;
@@ -35,7 +35,7 @@ export interface TestNavigationState {
   setCurrentQuestion: (index: number) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
-  setAnswer: (questionIndex: number, answerIndex: number) => void;
+  setAnswer: (questionIndex: number, answer: number | string) => void;
   removeAnswer: (questionIndex: number) => void;
   markQuestionAsReviewed: (questionIndex: number) => void;
   toggleNavigationPanel: () => void;
@@ -113,12 +113,12 @@ export const useTestNavigationStore = create<TestNavigationState>()(
         }
       },
       
-      setAnswer: (questionIndex, answerIndex) => {
+      setAnswer: (questionIndex, answer) => {
         const { selectedAnswers } = get();
         set({
           selectedAnswers: {
             ...selectedAnswers,
-            [questionIndex]: answerIndex
+            [questionIndex]: answer
           }
         });
       },
@@ -196,9 +196,34 @@ export const useTestNavigationStore = create<TestNavigationState>()(
       // Getters
       getQuestionStatus: (index) => {
         const state = get();
+        const question = state.questions[index];
+        const answer = state.selectedAnswers[index];
+        let isAnswered = false;
+
+        if (answer !== undefined && answer !== null) {
+          if (question?.type === 'writing') {
+            // For writing questions, check if answer is meaningful
+            if (typeof answer === 'string') {
+              const trimmedAnswer = answer.trim();
+              if (question.questionType === 'Write_Ordering') {
+                // For ordering questions, check if all words are used
+                const orderingItems = question.orderingItems || [];
+                const answerWords = trimmedAnswer.split(' ').filter(word => word.length > 0);
+                isAnswered = answerWords.length === orderingItems.length && answerWords.length > 0;
+              } else {
+                // For other writing questions, check if text is not empty
+                isAnswered = trimmedAnswer.length > 0;
+              }
+            }
+          } else {
+            // For non-writing questions (listening/reading), any answer means answered
+            isAnswered = true;
+          }
+        }
+
         return {
           index,
-          isAnswered: index in state.selectedAnswers,
+          isAnswered,
           isCurrent: index === state.currentQuestionIndex,
           isReviewed: state.reviewedQuestions.has(index),
           selectedAnswer: state.selectedAnswers[index]
@@ -211,13 +236,14 @@ export const useTestNavigationStore = create<TestNavigationState>()(
       },
       
       getAnsweredCount: () => {
-        const { selectedAnswers } = get();
-        return Object.keys(selectedAnswers).length;
+        const { questions } = get();
+        return questions.filter((_, index) => get().getQuestionStatus(index).isAnswered).length;
       },
       
       getUnansweredCount: () => {
-        const { questions, selectedAnswers } = get();
-        return questions.length - Object.keys(selectedAnswers).length;
+        const { questions } = get();
+        const answeredCount = questions.filter((_, index) => get().getQuestionStatus(index).isAnswered).length;
+        return questions.length - answeredCount;
       },
       
       getReviewedCount: () => {
@@ -226,14 +252,16 @@ export const useTestNavigationStore = create<TestNavigationState>()(
       },
       
       getProgressPercentage: () => {
-        const { questions, selectedAnswers } = get();
+        const { questions } = get();
         if (questions.length === 0) return 0;
-        return Math.round((Object.keys(selectedAnswers).length / questions.length) * 100);
+        const answeredCount = questions.filter((_, index) => get().getQuestionStatus(index).isAnswered).length;
+        return Math.round((answeredCount / questions.length) * 100);
       },
       
       canSubmitTest: () => {
-        const { questions, selectedAnswers } = get();
-        return questions.length > 0 && Object.keys(selectedAnswers).length === questions.length;
+        const { questions } = get();
+        const answeredCount = questions.filter((_, index) => get().getQuestionStatus(index).isAnswered).length;
+        return questions.length > 0 && answeredCount === questions.length;
       },
       
       canGoNext: () => {
@@ -252,18 +280,18 @@ export const useTestNavigationStore = create<TestNavigationState>()(
       },
       
       getNextUnansweredQuestion: () => {
-        const { questions, selectedAnswers, currentQuestionIndex } = get();
+        const { questions, currentQuestionIndex } = get();
         
         // Look for unanswered questions starting from current + 1
         for (let i = currentQuestionIndex + 1; i < questions.length; i++) {
-          if (!(i in selectedAnswers)) {
+          if (!get().getQuestionStatus(i).isAnswered) {
             return i;
           }
         }
         
         // Look for unanswered questions from the beginning
         for (let i = 0; i <= currentQuestionIndex; i++) {
-          if (!(i in selectedAnswers)) {
+          if (!get().getQuestionStatus(i).isAnswered) {
             return i;
           }
         }
@@ -272,18 +300,18 @@ export const useTestNavigationStore = create<TestNavigationState>()(
       },
       
       getPreviousUnansweredQuestion: () => {
-        const { questions, selectedAnswers, currentQuestionIndex } = get();
+        const { questions, currentQuestionIndex } = get();
         
         // Look for unanswered questions starting from current - 1
         for (let i = currentQuestionIndex - 1; i >= 0; i--) {
-          if (!(i in selectedAnswers)) {
+          if (!get().getQuestionStatus(i).isAnswered) {
             return i;
           }
         }
         
         // Look for unanswered questions from the end
         for (let i = questions.length - 1; i >= currentQuestionIndex; i--) {
-          if (!(i in selectedAnswers)) {
+          if (!get().getQuestionStatus(i).isAnswered) {
             return i;
           }
         }

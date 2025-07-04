@@ -242,7 +242,7 @@ export class PracticeApiService {
       
     return {
       id: rawData._id,
-      title: `${rawData.title} (${type === PracticeType.LISTENING ? 'Listening' : type === PracticeType.READING ? 'Reading' : 'Writing'})`,
+      title: `${rawData.title}`,
       displayOrder: rawData.display_order,
       level: rawData.level as HSKLevel,
       typePractice: type,
