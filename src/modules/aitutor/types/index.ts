@@ -142,7 +142,6 @@ export interface VoiceAssistantProps {
   onDeclineCall?: () => void;
   isConnecting?: boolean;
   isConnected?: boolean;
-  isFullScreenMode?: boolean;
 }
 
 export interface ChatInputProps {

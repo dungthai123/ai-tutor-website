@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Note, NoteStyle, NotesState } from '../types';
+import { Note, NoteStyle, NotesState, ProofreadingData } from '../types';
 import { NotesService } from '../services/notes.service';
 
 export function useNotes() {
@@ -33,9 +33,9 @@ export function useNotes() {
   }, []);
 
   // Create a new note
-  const createNote = useCallback((content: string, title?: string, style?: NoteStyle) => {
+  const createNote = useCallback((content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData) => {
     try {
-      const newNote = NotesService.createNote(content, title, style);
+      const newNote = NotesService.createNote(content, title, style, proofreading);
       setState(prev => ({
         ...prev,
         notes: [newNote, ...prev.notes],

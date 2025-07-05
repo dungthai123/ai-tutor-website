@@ -10,6 +10,7 @@ import { WritingHelperResults } from '@/modules/proofreading/components/WritingH
 import { useProofreader } from '@/modules/proofreading/hooks/useProofreader';
 import { useWritingHelper } from '@/modules/proofreading/hooks/useWritingHelper';
 import { useNotes } from '@/modules/notes/hooks/useNotes';
+import type { AssistantResult } from '@/modules/proofreading/types';
 import { ErrorMessage } from '@/modules/aitutor/components/ui/ErrorMessage';
 import { MainLayout } from '@/shared/components/layout/MainLayout';
 
@@ -135,13 +136,29 @@ export default function ProofreadingPage() {
     }
   }, [result]);
 
-  const handleSaveToNote = useCallback(async (title: string): Promise<boolean> => {
+  const handleSaveToNote = useCallback(async (title: string, proofreadingResult?: AssistantResult): Promise<boolean> => {
     if (!result?.correction) return false;
     
     try {
-      const savedNote = createNote(result.correction, title);
+      // Create proofreading data if we have proofreading results
+      let proofreading = undefined;
+      if (proofreadingResult && result) {
+        proofreading = {
+          originalText: content, // Use the original content before proofreading
+          correctedText: result.correction,
+          edits: result.edits.map(edit => ({
+            oldText: edit.oldText,
+            newText: edit.newText,
+            reason: edit.reasons.en
+          })),
+          suggestion: result.suggestion,
+          correctionCount: result.edits.length
+        };
+      }
+      
+      const savedNote = createNote(result.correction, title, undefined, proofreading);
       if (savedNote) {
-        console.log('[PROOFREAD_PAGE] Note saved successfully:', savedNote.id, 'with title:', title);
+        console.log('[PROOFREAD_PAGE] Note saved successfully:', savedNote.id, 'with title:', title, proofreading ? 'and proofreading data' : '');
         return true;
       }
       return false;
@@ -149,7 +166,7 @@ export default function ProofreadingPage() {
       console.error('[PROOFREAD_PAGE] Error saving note:', error);
       return false;
     }
-  }, [result, createNote]);
+  }, [result, createNote, content]);
 
   return (
     <MainLayout>
@@ -220,6 +237,7 @@ export default function ProofreadingPage() {
                   isEditable={isEditable}
                   hasResult={!!result}
                   characterCount={characterCount}
+                  proofreadingResult={result}
                 />
               </div>
 

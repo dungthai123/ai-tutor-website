@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { cn } from '@/utils/helpers';
+import type { AssistantResult } from '../types';
 
 interface EditorActionsProps {
   onProofread: () => void;
   onReset: () => void;
   onCopy: () => void;
   onEdit: () => void;
-  onSaveToNote?: (title: string) => Promise<boolean>;
+  onSaveToNote?: (title: string, proofreading?: AssistantResult) => Promise<boolean>;
   isLoading: boolean;
   isEditable: boolean;
   hasResult: boolean;
   characterCount: number;
   maxCharacters?: number;
   className?: string;
+  // Add proofreading data prop
+  proofreadingResult?: AssistantResult | null;
 }
 
 export function EditorActions({
@@ -28,6 +31,7 @@ export function EditorActions({
   characterCount,
   maxCharacters = 5000,
   className,
+  proofreadingResult,
 }: EditorActionsProps) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [noteTitle, setNoteTitle] = useState('');
@@ -49,7 +53,7 @@ export function EditorActions({
     setIsSaving(true);
     try {
       const title = noteTitle.trim() || 'My writing';
-      const success = await onSaveToNote(title);
+      const success = await onSaveToNote(title, proofreadingResult || undefined);
       
       if (success) {
         setSaveStatus('success');

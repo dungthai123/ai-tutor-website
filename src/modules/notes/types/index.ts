@@ -4,6 +4,19 @@ export interface NoteStyle {
   borderColor: string;     // e.g., 'border-purple-200', 'border-red-200', 'border-blue-200'
 }
 
+// Proofreading data to track corrections made
+export interface ProofreadingData {
+  originalText: string;
+  correctedText: string;
+  edits: {
+    oldText: string;
+    newText: string;
+    reason: string;
+  }[];
+  suggestion?: string;
+  correctionCount: number;
+}
+
 export interface Note {
   id: string; // Unique ID, e.g., from uuid
   title: string;
@@ -12,6 +25,7 @@ export interface Note {
   updatedAt: string; // ISO string date
   style: NoteStyle;
   source?: 'proofreader' | 'manual'; // Track where the note came from
+  proofreading?: ProofreadingData; // Store proofreading details if from proofreader
 }
 
 export interface NotesState {

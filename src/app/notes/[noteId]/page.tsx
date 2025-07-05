@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useNotes } from '@/modules/notes/hooks';
 import { Note, NoteStyle, NOTE_STYLES } from '@/modules/notes/types';
+import { ProofreadingDetails } from '@/modules/notes/components';
 import { cn } from '@/utils/helpers';
 
 export default function NoteEditPage() {
@@ -180,11 +181,7 @@ export default function NoteEditPage() {
                 style={{ color: 'inherit' }}
               />
             </div>
-          </div>
-
-          {/* Style Panel */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                        <div className="bg-white rounded-2xl p-6 mt-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 🎨 Style
               </h3>
@@ -214,9 +211,14 @@ export default function NoteEditPage() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Style Panel */}
+          <div className="lg:col-span-1">
+
 
             {/* Note Info */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mt-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 📊 Note Info
               </h3>
@@ -236,6 +238,14 @@ export default function NoteEditPage() {
                 </div>
               </div>
             </div>
+
+            {/* Proofreading Details */}
+            {note.proofreading && (
+              <ProofreadingDetails 
+                proofreading={note.proofreading}
+                className="mt-6"
+              />
+            )}
           </div>
         </div>
       </div>

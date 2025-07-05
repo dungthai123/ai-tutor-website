@@ -1,6 +1,3 @@
-// Layout Components
-export * from './layout';
-
 // Voice & Audio Components
 export * from './voice';
 

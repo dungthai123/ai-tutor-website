@@ -1,4 +1,4 @@
-import { Note, NoteStyle, NOTE_STYLES } from '../types';
+import { Note, NoteStyle, NOTE_STYLES, ProofreadingData } from '../types';
 
 const NOTES_STORAGE_KEY = 'ai-tutor-notes';
 
@@ -41,7 +41,7 @@ export class NotesService {
   /**
    * Create a new note
    */
-  static createNote(content: string, title?: string, style?: NoteStyle): Note {
+  static createNote(content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData): Note {
     const now = new Date().toISOString();
     
     // Auto-generate title from first line if not provided
@@ -57,14 +57,15 @@ export class NotesService {
       createdAt: now,
       updatedAt: now,
       style: noteStyle,
-      source: 'proofreader'
+      source: proofreading ? 'proofreader' : 'manual',
+      proofreading
     };
 
     const notes = NotesService.getAllNotes();
     notes.unshift(newNote); // Add to beginning of array
     NotesService.saveNotes(notes);
 
-    console.log('[NOTES_SERVICE] Created new note:', newNote.id);
+    console.log('[NOTES_SERVICE] Created new note:', newNote.id, proofreading ? 'with proofreading data' : 'manual note');
     return newNote;
   }
 
