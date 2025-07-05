@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Proofreading correction highlights */
+.correction-highlight {
+  @apply bg-amber-100 border-b border-dashed border-amber-500 cursor-pointer;
+}
+
+.correction-highlight:hover {
+  @apply bg-amber-200;
+}
+
+/* TipTap editor styles */
+.prose-editor-content .ProseMirror {
+  outline: none;
+  padding: 1rem;
+  min-height: 200px;
+}
+
+.prose-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.prose-editor-content .ProseMirror:focus {
+  outline: none;
+}
+
+/* Tippy tooltip theme */
+.tippy-box[data-theme~="light"] {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.tippy-box[data-theme~="light"] .tippy-arrow {
+  color: white;
+}
+
 html {
   font-size: 20px;
   /* or 112.5% for responsive scaling */

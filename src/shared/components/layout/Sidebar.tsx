@@ -26,6 +26,12 @@ const sidebarItems: SidebarItem[] = [
     icon: '📚'
   },
   {
+    id: 'proofreading',
+    label: 'Proofreading',
+    href: '/proofreading',
+    icon: '✍️'
+  },
+  {
     id: 'test-history',
     label: 'Test History',
     href: '/history',

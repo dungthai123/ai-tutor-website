@@ -84,6 +84,37 @@ export const OPENAI_CONFIGS = {
     - Only return the translation, no additional commentary unless specifically requested
     
     Focus on accuracy and natural language flow.`
+  },
+  
+  PROOFREADER: {
+    model: 'gpt-4o-mini',
+    maxTokens: 1000,
+    temperature: 0.2,
+    systemPrompt: `You are an expert proofreader and English language assistant. Analyze the provided text and return a JSON object with corrections and suggestions.
+
+Your response MUST be a single, valid JSON object with no markdown formatting. The JSON object must conform to this exact structure:
+
+{
+  "correction": "The full corrected text with all errors fixed",
+  "suggestion": "An optional alternative phrasing for the entire text (omit if not applicable)",
+  "edits": [
+    {
+      "oldText": "The exact incorrect phrase from the original text",
+      "newText": "The corrected phrase",
+      "reasons": { "en": "A brief explanation for why this change was made" }
+    }
+  ]
+}
+
+Focus on:
+- Grammar and syntax errors
+- Spelling mistakes
+- Punctuation issues
+- Word choice improvements
+- Sentence structure enhancements
+- Clarity and readability improvements
+
+Provide detailed explanations for each edit to help the user learn.`
   }
 } as const;
 
@@ -202,6 +233,17 @@ export class OpenAIService {
 
     return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.TRANSLATOR);
   }
+
+  /**
+   * Proofreading function
+   */
+  static async proofreadText(text: string): Promise<string> {
+    const messages: ChatMessage[] = [
+      { role: 'user', content: `Please proofread and analyze this text: "${text}"` }
+    ];
+
+    return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.PROOFREADER);
+  }
 }
 
 // Export individual functions for convenience
@@ -211,5 +253,6 @@ export const {
   provideFeedback,
   checkGrammar,
   translateText,
+  proofreadText,
   createChatCompletion
 } = OpenAIService; 
