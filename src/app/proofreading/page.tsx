@@ -5,8 +5,11 @@ import { GrammarEditor, GrammarEditorRef } from '@/modules/proofreading/componen
 import { EditorActions } from '@/modules/proofreading/components/EditorActions';
 import { TextSuggestion } from '@/modules/proofreading/components/TextSuggestion';
 import { CorrectionTooltipWrapper } from '@/modules/proofreading/components/CorrectionTooltip';
+import { WritingHelperForm } from '@/modules/proofreading/components/WritingHelperForm';
+import { WritingHelperResults } from '@/modules/proofreading/components/WritingHelperResults';
 import { useProofreader } from '@/modules/proofreading/hooks/useProofreader';
-import { LoadingSpinner } from '@/modules/aitutor/components/ui/LoadingSpinner';
+import { useWritingHelper } from '@/modules/proofreading/hooks/useWritingHelper';
+import { useNotes } from '@/modules/notes/hooks/useNotes';
 import { ErrorMessage } from '@/modules/aitutor/components/ui/ErrorMessage';
 import { MainLayout } from '@/shared/components/layout/MainLayout';
 
@@ -18,6 +21,15 @@ export default function ProofreadingPage() {
   const [characterCount, setCharacterCount] = useState(0);
   
   const { result, loading, error, proofread, reset, clearError } = useProofreader();
+  const { 
+    result: writingHelperResult, 
+    loading: writingHelperLoading, 
+    error: writingHelperError, 
+    generateHelp, 
+    reset: resetWritingHelper,
+    clearError: clearWritingHelperError 
+  } = useWritingHelper();
+  const { createNote } = useNotes();
 
   const handleEditorUpdate = useCallback((newContent: string) => {
     setContent(newContent);
@@ -123,120 +135,165 @@ export default function ProofreadingPage() {
     }
   }, [result]);
 
+  const handleSaveToNote = useCallback(async (title: string): Promise<boolean> => {
+    if (!result?.correction) return false;
+    
+    try {
+      const savedNote = createNote(result.correction, title);
+      if (savedNote) {
+        console.log('[PROOFREAD_PAGE] Note saved successfully:', savedNote.id, 'with title:', title);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('[PROOFREAD_PAGE] Error saving note:', error);
+      return false;
+    }
+  }, [result, createNote]);
+
   return (
     <MainLayout>
-    <div className=" mx-auto p-4 md:p-8 max-w-4xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          AI Proofreading Tool
-        </h1>
-        <p className="text-lg text-gray-600">
-          Write or paste your text below and get instant feedback on grammar, spelling, and style.
-        </p>
-      </header>
+      <div className="mx-auto p-4 md:p-8 h-screen flex flex-col overflow-hidden">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            AI Writing & Proofreading Studio
+          </h1>
+          <p className="text-lg text-gray-600">
+            Get writing assistance and proofread your text with AI-powered tools.
+          </p>
+        </header>
 
-      <div className="space-y-6">
-        {/* Error Message */}
-        {error && (
-          <ErrorMessage 
-            error={error}
-            onRetry={clearError}
-          />
-        )}
-
-        {/* Main Editor Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Loading Overlay */}
-          {loading && (
-            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-              <LoadingSpinner />
-            </div>
-          )}
-
-          {/* Editor */}
-          <div className="relative">
-            {result ? (
-              <CorrectionTooltipWrapper 
-                edits={result.edits}
-                className="min-h-[300px]"
-              >
-                <GrammarEditor
-                  ref={editorRef}
-                  initialContent={content}
-                  editable={isEditable}
-                  onUpdate={handleEditorUpdate}
-                  placeholder="Start typing your text here..."
-                  className="min-h-[300px]"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full overflow-hidden">
+          {/* Left Panel - Writing & Proofreading */}
+          <div className="space-y-6 h-full overflow-y-auto pb-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                📄 Your Writing Space
+              </h2>
+              
+              {/* Error Message */}
+              {error && (
+                <ErrorMessage 
+                  error={error}
+                  onRetry={clearError}
                 />
-              </CorrectionTooltipWrapper>
+              )}
+
+              {/* Main Editor Card */}
+              <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden h-full">
+                {/* Editor */}
+                <div className="relative h-full">
+                  {result ? (
+                    <CorrectionTooltipWrapper 
+                      edits={result.edits}
+                      className="min-h-[400px] h-full"
+                    >
+                      <GrammarEditor
+                        ref={editorRef}
+                        initialContent={content}
+                        editable={isEditable}
+                        onUpdate={handleEditorUpdate}
+                        placeholder="Start typing your text here..."
+                        className="min-h-[400px] h-full"
+                      />
+                    </CorrectionTooltipWrapper>
+                  ) : (
+                    <GrammarEditor
+                      ref={editorRef}
+                      initialContent={content}
+                      editable={isEditable}
+                      onUpdate={handleEditorUpdate}
+                      placeholder="Start typing your text here..."
+                      className="min-h-[400px] h-full"
+                    />
+                  )}
+                </div>
+
+                {/* Actions */}
+                <EditorActions
+                  onProofread={handleProofread}
+                  onReset={handleReset}
+                  onCopy={handleCopy}
+                  onEdit={handleEdit}
+                  onSaveToNote={handleSaveToNote}
+                  isLoading={loading}
+                  isEditable={isEditable}
+                  hasResult={!!result}
+                  characterCount={characterCount}
+                />
+              </div>
+
+              {/* Suggestion */}
+              {result?.suggestion && (
+                <div className="mt-4">
+                  <TextSuggestion
+                    suggestion={result.suggestion}
+                    onApply={handleApplySuggestion}
+                  />
+                </div>
+              )}
+
+              {/* Results Summary */}
+              {result && (
+                <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    Proofreading Results
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {result.edits.length}
+                      </div>
+                      <div className="text-gray-600">Corrections</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {characterCount}
+                      </div>
+                      <div className="text-gray-600">Characters</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {result.suggestion ? '1' : '0'}
+                      </div>
+                      <div className="text-gray-600">Suggestions</div>
+                    </div>
+                  </div>
+                  {result.edits.length > 0 && (
+                    <p className="mt-4 text-sm text-gray-600">
+                      💡 Click on highlighted text to see correction details
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Panel - AI Writing Helper */}
+          <div className="space-y-6 h-full overflow-y-auto pb-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {/* Error Message for Writing Helper */}
+            {writingHelperError && (
+              <ErrorMessage 
+                error={writingHelperError}
+                onRetry={clearWritingHelperError}
+              />
+            )}
+
+            {/* Writing Helper Form or Results */}
+            {writingHelperResult ? (
+              <WritingHelperResults 
+                result={writingHelperResult}
+                onReset={resetWritingHelper}
+              />
             ) : (
-              <GrammarEditor
-                ref={editorRef}
-                initialContent={content}
-                editable={isEditable}
-                onUpdate={handleEditorUpdate}
-                placeholder="Start typing your text here..."
-                className="min-h-[300px]"
+              <WritingHelperForm
+                onSubmit={generateHelp}
+                loading={writingHelperLoading}
               />
             )}
           </div>
-
-          {/* Actions */}
-          <EditorActions
-            onProofread={handleProofread}
-            onReset={handleReset}
-            onCopy={handleCopy}
-            onEdit={handleEdit}
-            isLoading={loading}
-            isEditable={isEditable}
-            hasResult={!!result}
-            characterCount={characterCount}
-          />
         </div>
-
-        {/* Suggestion */}
-        {result?.suggestion && (
-          <TextSuggestion
-            suggestion={result.suggestion}
-            onApply={handleApplySuggestion}
-          />
-        )}
-
-        {/* Results Summary */}
-        {result && (
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Proofreading Results
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {result.edits.length}
-                </div>
-                <div className="text-gray-600">Corrections Made</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {characterCount}
-                </div>
-                <div className="text-gray-600">Characters</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {result.suggestion ? '1' : '0'}
-                </div>
-                <div className="text-gray-600">Suggestions</div>
-              </div>
-            </div>
-            {result.edits.length > 0 && (
-              <p className="mt-4 text-sm text-gray-600">
-                💡 Click on highlighted text to see correction details
-              </p>
-            )}
-          </div>
-        )}
       </div>
-    </div>
     </MainLayout>
   );
 } 

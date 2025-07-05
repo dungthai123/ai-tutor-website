@@ -115,6 +115,40 @@ Focus on:
 - Clarity and readability improvements
 
 Provide detailed explanations for each edit to help the user learn.`
+  },
+  
+  WRITING_HELPER: {
+    model: 'gpt-4o-mini',
+    maxTokens: 1500,
+    temperature: 0.4,
+    systemPrompt: `You are an expert writing coach and English language teacher. Help users create structured, engaging writing based on their topic, style, tone, and level preferences.
+
+Your response MUST be a single, valid JSON object with no markdown formatting. The JSON object must conform to this exact structure:
+
+{
+  "outline": [
+    "1. First main point or section",
+    "2. Second main point or section",
+    "3. Third main point or section",
+    "4. Conclusion or final thought"
+  ],
+  "vocabulary": [
+    { "word": "example", "meaning": "a clear definition or explanation" },
+    { "word": "another", "meaning": "another helpful word definition" }
+  ],
+  "grammarTips": [
+    "Use past tense verbs for narrative writing",
+    "Include transition words to connect ideas",
+    "Vary your sentence structure for better flow"
+  ],
+  "writingStyleTips": [
+    "Start with a compelling hook to grab attention",
+    "Show, don't tell - use descriptive details",
+    "End with a memorable conclusion that ties back to your opening"
+  ]
+}
+
+Tailor your suggestions to match the requested writing style, tone, and difficulty level. Provide practical, actionable advice that helps the user improve their writing skills.`
   }
 } as const;
 
@@ -244,6 +278,30 @@ export class OpenAIService {
 
     return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.PROOFREADER);
   }
+
+  /**
+   * Writing helper function
+   */
+  static async generateWritingHelp(request: {
+    topic: string;
+    style: string;
+    tone: string;
+    level: string;
+  }): Promise<string> {
+    const prompt = `Please help me write about: "${request.topic}"
+
+Writing Style: ${request.style}
+Tone: ${request.tone}
+Level: ${request.level}
+
+Provide a structured outline, relevant vocabulary, grammar tips, and writing style suggestions.`;
+
+    const messages: ChatMessage[] = [
+      { role: 'user', content: prompt }
+    ];
+
+    return OpenAIService.createChatCompletion(messages, OPENAI_CONFIGS.WRITING_HELPER);
+  }
 }
 
 // Export individual functions for convenience
@@ -254,5 +312,9 @@ export const {
   checkGrammar,
   translateText,
   proofreadText,
+  generateWritingHelp,
   createChatCompletion
-} = OpenAIService; 
+} = OpenAIService;
+
+// Export the service class as default
+export default OpenAIService; 

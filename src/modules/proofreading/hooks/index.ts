@@ -1,1 +1,2 @@
-export { useProofreader } from './useProofreader'; 
+export { useProofreader } from './useProofreader';
+export { useWritingHelper } from './useWritingHelper'; 

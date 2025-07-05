@@ -32,6 +32,12 @@ const sidebarItems: SidebarItem[] = [
     icon: '✍️'
   },
   {
+    id: 'my-notes',
+    label: 'My Notes',
+    href: '/notes',
+    icon: '📔'
+  },
+  {
     id: 'test-history',
     label: 'Test History',
     href: '/history',

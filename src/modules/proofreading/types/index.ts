@@ -16,4 +16,29 @@ export interface ProofreadingState {
   loading: boolean;
   error: string | null;
   isEditable: boolean;
+}
+
+export interface WritingHelperRequest {
+  topic: string;
+  style: string;
+  tone: string;
+  level: string;
+}
+
+export interface VocabularyItem {
+  word: string;
+  meaning: string;
+}
+
+export interface WritingHelperResponse {
+  outline: string[];
+  vocabulary: VocabularyItem[];
+  grammarTips: string[];
+  writingStyleTips: string[];
+}
+
+export interface WritingHelperState {
+  loading: boolean;
+  error: string | null;
+  result: WritingHelperResponse | null;
 } 
