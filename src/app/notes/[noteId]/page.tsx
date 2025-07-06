@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import { useNotes } from '@/modules/notes/hooks';
+import { useNotes, useGrammarCheck } from '@/modules/notes/hooks';
 import { Note, NoteStyle, NOTE_STYLES } from '@/modules/notes/types';
-import { ProofreadingDetails } from '@/modules/notes/components';
+import { ProofreadingDetails, GrammarChecker } from '@/modules/notes/components';
 import { cn } from '@/utils/helpers';
 
 export default function NoteEditPage() {
@@ -14,6 +14,7 @@ export default function NoteEditPage() {
   const noteId = params.noteId as string;
   
   const { getNoteById, updateNote, deleteNote } = useNotes();
+  const { issues, isChecking, checkGrammar, applyCorrection } = useGrammarCheck();
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -21,6 +22,7 @@ export default function NoteEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isGrammarCheckEnabled, setIsGrammarCheckEnabled] = useState(false);
 
   // Load note data
   useEffect(() => {
@@ -35,6 +37,13 @@ export default function NoteEditPage() {
       setIsLoading(false);
     }
   }, [noteId, getNoteById]);
+
+  // Trigger grammar check when enabled
+  useEffect(() => {
+    if (isGrammarCheckEnabled && content.trim()) {
+      checkGrammar(content);
+    }
+  }, [isGrammarCheckEnabled, content, checkGrammar]);
 
   // Handle saving
   const handleSave = async () => {
@@ -67,6 +76,36 @@ export default function NoteEditPage() {
     const success = deleteNote(note.id);
     if (success) {
       router.push('/notes');
+    }
+  };
+
+  // Handle content change with grammar checking
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    if (isGrammarCheckEnabled && newContent.trim()) {
+      // Debounce grammar checking
+      const timeoutId = setTimeout(() => {
+        checkGrammar(newContent);
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  };
+
+  // Handle applying grammar corrections
+  const handleApplyCorrection = async (issue: import('@/modules/notes/hooks').GrammarIssue, suggestionIndex: number) => {
+    try {
+      const correctedText = await applyCorrection(content, issue, suggestionIndex);
+      setContent(correctedText);
+      
+      // Re-check grammar after applying correction
+      if (isGrammarCheckEnabled) {
+        setTimeout(() => {
+          checkGrammar(correctedText);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Failed to apply correction:', error);
     }
   };
 
@@ -124,6 +163,17 @@ export default function NoteEditPage() {
           
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setIsGrammarCheckEnabled(!isGrammarCheckEnabled)}
+              className={cn(
+                'px-4 py-2 rounded-md font-medium transition-colors',
+                isGrammarCheckEnabled
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              )}
+            >
+              📝 Grammar Check
+            </button>
+            <button
               onClick={() => setShowDeleteConfirm(true)}
               className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             >
@@ -172,7 +222,7 @@ export default function NoteEditPage() {
               {/* Content Textarea */}
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => handleContentChange(e.target.value)}
                 placeholder="Start writing your note..."
                 className={cn(
                   'w-full min-h-[400px] bg-transparent border-none outline-none',
@@ -238,6 +288,17 @@ export default function NoteEditPage() {
                 </div>
               </div>
             </div>
+
+            {/* Grammar Checker */}
+            {isGrammarCheckEnabled && (
+              <GrammarChecker
+                issues={issues}
+                isChecking={isChecking}
+                text={content}
+                onApplyCorrection={handleApplyCorrection}
+                className="mt-6"
+              />
+            )}
 
             {/* Proofreading Details */}
             {note.proofreading && (
