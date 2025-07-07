@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ChatApiRequest, ChatApiResponse } from '@/modules/chatbot/types';
-import { chatbotResponse } from '@/shared/services';
+import { OpenAIService } from '@/shared/services';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }));
 
     // Use shared OpenAI service
-    const reply = await chatbotResponse(message, formattedHistory);
+    const reply = await OpenAIService.chatbotResponse(message, formattedHistory);
 
     return NextResponse.json<ChatApiResponse>({
       reply,

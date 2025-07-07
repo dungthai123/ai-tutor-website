@@ -1,60 +1,55 @@
-"""Chinese tutor agent class with student tracking capabilities."""
+"""Chinese tutor agent class with task tracking capabilities."""
 
 from typing import Dict, Optional
-from livekit.agents import Agent, function_tool, RunContext
-from db_driver import DatabaseDriver
+from livekit.agents import Agent
+from livekit.plugins import openai, silero
+from openai.types.beta.realtime.session import InputAudioTranscription, TurnDetection
 from topic_handler import create_instructions
-
-# Initialize database driver
-DB = DatabaseDriver()
+from task_tools import TaskTools
+from config import (
+    STT_MODEL, STT_LANGUAGE, LLM_MODEL, TTS_MODEL,
+    VAD_THRESHOLD, VAD_SILENCE_DURATION, VAD_PREFIX_PADDING,
+    VAD_MIN_SPEECH_DURATION, VAD_MIN_SILENCE_DURATION,
+    VAD_ACTIVATION_THRESHOLD, VAD_SAMPLE_RATE
+)
 
 
 class ChineseTutor(Agent):
-    """Chinese language tutor agent with student tracking capabilities."""
+    """Chinese language tutor agent with task tracking capabilities."""
     
     def __init__(self, topic_data: Optional[Dict] = None) -> None:
         instructions = create_instructions(topic_data)
-        super().__init__(instructions=instructions)
+        super().__init__(
+            instructions=instructions,
+            llm=openai.realtime.RealtimeModel(
+                voice=TTS_MODEL,
+                model="gpt-4o-mini-realtime-preview",
+                input_audio_transcription=InputAudioTranscription(
+                    model=STT_MODEL,
+                    language=STT_LANGUAGE,
+                ),
+                turn_detection=TurnDetection(
+                    type="server_vad",
+                    threshold=VAD_THRESHOLD,
+                    silence_duration_ms=VAD_SILENCE_DURATION,
+                    prefix_padding_ms=VAD_PREFIX_PADDING,
+                    create_response=True,
+                    interrupt_response=True
+                ),
+            ),
+            vad=silero.VAD.load(
+                min_speech_duration=VAD_MIN_SPEECH_DURATION,
+                min_silence_duration=VAD_MIN_SILENCE_DURATION,
+                activation_threshold=VAD_ACTIVATION_THRESHOLD,
+                sample_rate=VAD_SAMPLE_RATE
+            ),
+            tools=[
+                TaskTools.check_conversation_task,
+                TaskTools.get_task_progress
+            ]
+        )
         
         self.topic_data = topic_data
         self.topic_name = topic_data['topic_name'] if topic_data else "General Chinese"
-        self._student_details = self._init_student_details()
 
-    def _init_student_details(self) -> Dict[str, any]:
-        """Initialize empty student details."""
-        return {
-            "name": "",
-            "email": "",
-            "level": "", 
-            "goals": "",
-            "lessons_completed": 0
-        }
-
-    def get_student_str(self) -> str:
-        """Get formatted string of student details."""
-        return "\n".join(f"{key}: {value}" for key, value in self._student_details.items())
-
-    def has_student(self) -> bool:
-        """Check if student details are available."""
-        return bool(self._student_details["name"])
-
-    @function_tool()
-    async def lookup_student(self, context: RunContext, name: str) -> str:
-        """Look up a student by their name (optional - only use if student mentions they want to save progress).
-        
-        Args:
-            name: The name of the student to look up
-        """
-        result = DB.get_student_by_name(name)
-        if result is None:
-            return "Student profile not found. We can create one if you'd like to track your progress!"
-
-        self._student_details = {
-            "name": result.name,
-            "email": result.email,
-            "level": result.level,
-            "goals": result.goals,
-            "lessons_completed": result.lessons_completed
-        }
-
-        return f"Welcome back! Here are your details:\n{self.get_student_str()}" 
+ 

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useVoiceAssistant } from "@livekit/components-react";
+import React, { useState, useContext, useEffect } from 'react';
+import { useVoiceAssistant, RoomContext } from "@livekit/components-react";
 import { AnimatePresence } from "framer-motion";
 import { AgentTile } from './AgentTile';
 import { ChatMessageView } from './ChatMessageView';
@@ -9,14 +9,24 @@ import { ChatEntry } from './ChatEntry';
 import { ChatEmptyState } from './ChatEmptyState';
 import { ControlBar } from './ControlBar';
 import { ConnectingState } from '../voice/ConnectingState';
+import { TaskList } from '../task/TaskList';
 import { useChatAndTranscription } from '@/modules/aitutor/hooks/useChatAndTranscription';
 import { VoiceAssistantProps } from '../../types';
 
 // Call Interface Component (when connected to LiveKit)
 function CallInterface({ selectedTopic }: { selectedTopic: VoiceAssistantProps['selectedTopic'] }) {
   const { state, audioTrack } = useVoiceAssistant();
+  const room = useContext(RoomContext);
   const { messages, send, isSending } = useChatAndTranscription();
   const [chatOpen, setChatOpen] = useState(false);
+
+  // Expose room to window for components that need it (like the working reference)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && room) {
+      (window as unknown as { liveKitRoom: typeof room }).liveKitRoom = room;
+      console.log('🔗 Room exposed to window.liveKitRoom');
+    }
+  }, [room]);
 
   const handleSendMessage = async (message: string) => {
     try {
@@ -28,50 +38,58 @@ function CallInterface({ selectedTopic }: { selectedTopic: VoiceAssistantProps['
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-hidden">
-      {/* Compact Voice Visualizer */}
-      <div className="h-24 flex items-center justify-center border-b border-gray-700">
-        {audioTrack && (
-          <AgentTile
-            state={state}
-            audioTrack={audioTrack}
-            size={80}
-            className=""
-          />
-        )}
-      </div>
-
-      {/* Chat Messages Area - with proper height constraint */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <ChatMessageView 
-          className="flex-1 px-4 py-2 max-h-[calc(100vh-280px)]"
-          chatOpen={chatOpen}
-        >
-          {messages.length === 0 ? (
-            <ChatEmptyState selectedTopic={selectedTopic} variant="compact" />
-          ) : (
-            <AnimatePresence>
-              {messages.map((msg) => (
-                <ChatEntry 
-                  key={msg.id} 
-                  message={msg}
-                  variant="compact"
-                />
-              ))}
-            </AnimatePresence>
+    <div className="h-full flex bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-hidden">
+      {/* Left Panel - Chat and Voice */}
+      <div className="flex-1 flex flex-col">
+        {/* Compact Voice Visualizer */}
+        <div className="h-24 flex items-center justify-center border-b border-gray-700">
+          {audioTrack && (
+            <AgentTile
+              state={state}
+              audioTrack={audioTrack}
+              size={80}
+              className=""
+            />
           )}
-        </ChatMessageView>
+        </div>
+
+        {/* Chat Messages Area - with proper height constraint */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <ChatMessageView 
+            className="flex-1 px-4 py-2 max-h-[calc(100vh-280px)]"
+            chatOpen={chatOpen}
+          >
+            {messages.length === 0 ? (
+              <ChatEmptyState selectedTopic={selectedTopic} variant="compact" />
+            ) : (
+              <AnimatePresence>
+                {messages.map((msg) => (
+                  <ChatEntry 
+                    key={msg.id} 
+                    message={msg}
+                    variant="compact"
+                  />
+                ))}
+              </AnimatePresence>
+            )}
+          </ChatMessageView>
+        </div>
+
+        {/* Control Bar with integrated chat input */}
+        <div className="bg-gray-800 border-t border-gray-700">
+          <ControlBar
+            chatOpen={chatOpen}
+            onChatToggle={() => setChatOpen(!chatOpen)}
+            onSendMessage={handleSendMessage}
+            disabled={isSending}
+            variant="compact"
+          />
+        </div>
       </div>
 
-      {/* Control Bar with integrated chat input */}
-      <div className="bg-gray-800 border-t border-gray-700">
-        <ControlBar
-          chatOpen={chatOpen}
-          onChatToggle={() => setChatOpen(!chatOpen)}
-          onSendMessage={handleSendMessage}
-          disabled={isSending}
-          variant="compact"
-        />
+      {/* Right Panel - Task List */}
+      <div className="w-80 border-l border-gray-700 bg-gray-900 p-4 overflow-y-auto">
+        <TaskList room={room} />
       </div>
     </div>
   );

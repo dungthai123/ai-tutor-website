@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { tutorResponse } from '@/shared/services';
+import { OpenAIService } from '@/shared/services';
 
 interface TutorRequest {
   studentInput: string;
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use shared OpenAI service for AI tutor
-    const feedback = await tutorResponse(studentInput, context);
+    const feedback = await OpenAIService.tutorResponse(studentInput, context);
 
     return NextResponse.json<TutorResponse>({
       feedback,

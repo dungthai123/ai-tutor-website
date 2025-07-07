@@ -12,6 +12,8 @@ from topic_handler import extract_topic_from_participant, get_welcome_message
 from chinese_tutor import ChineseTutor
 from session_manager import create_agent_session
 from audio_handler import  create_transcript_saver, create_background_audio
+from models import UserData
+from handlers import HandlerRegistry
 
 
 async def entrypoint(ctx: agents.JobContext):
@@ -35,22 +37,28 @@ async def entrypoint(ctx: agents.JobContext):
     
     print(f"🎯 Using topic: {topic_data['topic_name'] if topic_data else 'General Chinese'}")
     
-    # Create tutor and session
+    # Create user data and task system
+    userdata = UserData(ctx=ctx)
+    
+    # Create tutor and session - the key fix is here
     tutor = ChineseTutor(topic_data=topic_data)
     session = create_agent_session()
+    session.userdata = userdata
     
     # Set up speech handling
     @session.on("user_speech_committed")
     def on_speech(msg: llm.ChatMessage):
         asyncio.create_task(tutor.handle_user_speech(session, msg))
 
-    # Set up audio recording
-    
     # Set up transcript saving
     save_transcript = create_transcript_saver(ctx, category_id, topic_id, topic_data, tutor, session)
     ctx.add_shutdown_callback(save_transcript)
 
-    # Start session
+    # Initialize and register RPC handlers for task management
+    handler_registry = HandlerRegistry(userdata, session, ctx)
+    handler_registry.register_all_handlers()
+
+    # Start session with the tutor that has task tools
     await session.start(
         room=ctx.room,
         agent=tutor,

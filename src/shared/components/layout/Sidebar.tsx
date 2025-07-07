@@ -20,6 +20,12 @@ const sidebarItems: SidebarItem[] = [
     icon: '🎯'
   },
   {
+    id: 'chat-ai',
+    label: 'Chat AI',
+    href: '/chatai',
+    icon: '🤖'
+  },
+  {
     id: 'hsk-practice',
     label: 'HSK Practice',
     href: '/practice',
