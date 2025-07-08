@@ -28,6 +28,8 @@ export function ImageGrid({
             onClick={() => onImageClick?.(index)}
           >
             <Image
+              width={100}
+              height={100}
               src={getImageUrl(imageUrl)}
               alt={`Option ${String.fromCharCode(65 + index)}`}
               className="w-full h-32 object-cover rounded-lg border border-gray-200 group-hover:border-blue-300 transition-all duration-200 shadow-sm"

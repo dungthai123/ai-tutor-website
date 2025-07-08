@@ -249,4 +249,7 @@ export interface FeedbackRequest {
 export interface TranslationRequest {
   text: string;
   targetLanguage: string;
-} 
+}
+
+// Task related types
+export type { Task, TaskCategory, TaskStatus, TaskCheckRequest, TaskCheckResponse } from './tasks'; 

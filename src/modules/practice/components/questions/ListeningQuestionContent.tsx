@@ -22,7 +22,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ListeningQuizModel, ListeningQuestionType } from '../../types';
-import { Button } from '@/shared/components/ui/buttons/Button';
 import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
 import { SubtitlesSection } from '../shared/SubtitlesSection';
 import { AspectRatioImage } from '../shared/AspectRatioImage';
@@ -56,7 +55,6 @@ export function ListeningQuestionContent({
     isShowExplanation,
     isShowTranscript,
     fontSize,
-    toggleTranslation,
     toggleTranscript
   } = usePracticeDetailStore();
 
@@ -96,6 +94,11 @@ export function ListeningQuestionContent({
       
       audio.onloadedmetadata = () => {
         setDuration(audio.duration);
+        // Auto-play when audio metadata is loaded
+        audio.play().catch((error) => {
+          console.warn('Auto-play failed:', error);
+          // If auto-play fails (browser policy), user will need to click play
+        });
       };
       
       audio.ontimeupdate = () => {
@@ -124,6 +127,18 @@ export function ListeningQuestionContent({
       }
     };
   }, [audioUrl]);
+
+  // Auto-play when question changes (new questionIndex)
+  useEffect(() => {
+    if (audioRef.current && audioUrl) {
+      // Reset current time and auto-play for new question
+      audioRef.current.currentTime = 0;
+      setCurrentTime(0);
+      audioRef.current.play().catch((error) => {
+        console.warn('Auto-play failed:', error);
+      });
+    }
+  }, [questionIndex, audioUrl]);
 
   const handlePlayAudio = () => {
     if (!audioRef.current || !audioUrl) return;
@@ -248,26 +263,6 @@ export function ListeningQuestionContent({
 
   return (
     <div className="bg-white">
-      {/* Control buttons */}
-      <div className="flex justify-end gap-2 mb-4">
-        <Button
-          variant="secondary"
-          onClick={toggleTranslation}
-          className={`text-xs px-3 py-1 ${isShowTranslation ? 'bg-blue-100' : ''}`}
-        >
-          🌐 Translate
-        </Button>
-        {transcript && (
-          <Button
-            variant="secondary"
-            onClick={toggleTranscript}
-            className={`text-xs px-3 py-1 ${isShowTranscript ? 'bg-green-100' : ''}`}
-          >
-            📝 Transcript
-          </Button>
-        )}
-      </div>
-
       {/* Question Image - displayed above audio player when available */}
       {quizModel.imageUrl && (
         <div className="mb-6">
@@ -303,12 +298,6 @@ export function ListeningQuestionContent({
         </div>
       )}
 
-      {/* Question Type Info */}
-      {quizModel.questionType && (
-        <div className="mt-4 text-xs text-gray-500">
-          Question Type: {quizModel.questionType}
-        </div>
-      )}
     </div>
   );
 } 

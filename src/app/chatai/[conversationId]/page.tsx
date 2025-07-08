@@ -19,16 +19,17 @@ import {
 import { 
   NewChatInput
 } from '@/modules/chatai/components/input';
-import { useChatPage } from '@/modules/chatai/hooks';
+import {
+  TaskChecklistPanel
+} from '@/modules/chatai/components/tasks';
+import { useChatPage, useTasks } from '@/modules/chatai/hooks';
+import { SpeechToTextProvider, useSpeechToTextContext } from '@/modules/chatai/contexts/SpeechToTextContext';
 
 interface ChatPageProps {
   params: Promise<{ conversationId: string }>;
 }
 
-export default function ChatPage({ params }: ChatPageProps) {
-  const resolvedParams = React.use(params);
-  const conversationId = resolvedParams.conversationId;
-  
+function ChatPageContent({ conversationId }: { conversationId: string }) {
   const {
     topicDetail,
     loading,
@@ -42,6 +43,37 @@ export default function ChatPage({ params }: ChatPageProps) {
     setShowSettings,
   } = useChatPage({ conversationId });
 
+  // Task management
+  const {
+    taskCategories,
+    isCheckingTasks,
+    checkTaskCompletion,
+  } = useTasks(topicDetail);
+
+  // Speech-to-text tracking
+  const { isSpeechToTextMessage } = useSpeechToTextContext();
+
+  // Integrate task checking with chat messages (only for speech-to-text)
+  React.useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    
+    // Only check tasks for user messages that came from speech-to-text
+    if (lastMessage && lastMessage.isUserMessage && topicDetail) {
+      const messageContent = lastMessage.content.original;
+      
+      if (isSpeechToTextMessage(messageContent)) {
+        console.log('🎯 Checking task completion for speech-to-text message:', messageContent);
+        
+        // Trigger task completion check
+        checkTaskCompletion(messages, messageContent).catch(error => {
+          console.error('Failed to check task completion:', error);
+        });
+      } else {
+        console.log('⏭️ Skipping task check for text input message:', messageContent);
+      }
+    }
+  }, [messages, topicDetail, isSpeechToTextMessage]);
+
   // Loading state
   if (loading) {
     return <LoadingOverlay message="Initializing conversation..." />;
@@ -53,35 +85,55 @@ export default function ChatPage({ params }: ChatPageProps) {
   }
 
   return (
-    <div className="h-screen w-full relative flex flex-col overflow-hidden">
-      {/* Background Image - Absolute */}
-      <ChatBackground imageBackground={imageBackground} />
+    <div className="h-screen w-full relative flex overflow-hidden">
+      {/* Main Chat Panel */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Background Image - Absolute */}
+        <ChatBackground imageBackground={imageBackground} />
 
-      {/* Header - Fixed height */}
-      <ChatHeader
-        topicDetail={topicDetail}
-        onBack={handleBack}
-        onSettingsToggle={handleSettingsToggle}
-        showSettings={showSettings}
-      />
+        {/* Header - Fixed height */}
+        <ChatHeader
+          topicDetail={topicDetail}
+          onBack={handleBack}
+          onSettingsToggle={handleSettingsToggle}
+          showSettings={showSettings}
+        />
 
-      {/* Messages Container - Flex-1 to take remaining space */}
-      <ChatMessages messages={messages} />
-      
-      {/* End of conversation message */}
-      <ChatEndConversation 
-        isEndConversation={isEndConversation} 
-        onBack={handleBack} 
-      />
+        {/* Messages Container - Flex-1 to take remaining space */}
+        <ChatMessages messages={messages} />
+        
+        {/* End of conversation message */}
+        <ChatEndConversation 
+          isEndConversation={isEndConversation} 
+          onBack={handleBack} 
+        />
 
-      {/* Chat Input - Fixed height */}
-      {!isEndConversation && <NewChatInput />}
+        {/* Chat Input - Fixed height */}
+        {!isEndConversation && <NewChatInput />}
 
-      {/* Settings Panel */}
-      <SettingsPanel 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+        {/* Settings Panel */}
+        <SettingsPanel 
+          isOpen={showSettings} 
+          onClose={() => setShowSettings(false)} 
+        />
+      </div>
+
+      {/* Task Checklist Panel*/}
+      <TaskChecklistPanel 
+        taskCategories={taskCategories}
+        isCheckingTasks={isCheckingTasks}
       />
     </div>
+  );
+}
+
+export default function ChatPage({ params }: ChatPageProps) {
+  const resolvedParams = React.use(params);
+  const conversationId = resolvedParams.conversationId;
+  
+  return (
+    <SpeechToTextProvider>
+      <ChatPageContent conversationId={conversationId} />
+    </SpeechToTextProvider>
   );
 } 

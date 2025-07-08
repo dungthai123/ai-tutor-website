@@ -34,9 +34,6 @@ export function ChatHeader({
             <h1 className="text-lg font-semibold text-gray-900">
               {topicDetail?.title || 'Chat AI'}
             </h1>
-            {topicDetail?.description && (
-              <p className="text-sm text-gray-600">{topicDetail.description}</p>
-            )}
           </div>
         </div>
 

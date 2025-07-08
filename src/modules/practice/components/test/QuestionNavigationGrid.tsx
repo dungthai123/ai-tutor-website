@@ -97,8 +97,9 @@ export function QuestionNavigationGrid({
             {group.title}
           </h3>
           <div className="grid grid-cols-5 gap-3">
-            {group.questions.map(({ globalIndex }) => {
-              const questionNumber = (globalIndex + 1).toString().padStart(2, '0');
+            {group.questions.map(({ question, globalIndex }) => {
+              // Use the question ID instead of index-based number
+              const questionId = question.id;
               
               return (
                 <button
@@ -110,9 +111,9 @@ export function QuestionNavigationGrid({
                     'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
                     getQuestionButtonStyle(globalIndex)
                   )}
-                  title={`Question ${globalIndex + 1} - ${getQuestionStatus(globalIndex).isAnswered ? 'Answered' : 'Unanswered'}`}
+                  title={`Question ${questionId} - ${getQuestionStatus(globalIndex).isAnswered ? 'Answered' : 'Unanswered'}`}
                 >
-                  {questionNumber}
+                  {questionId}
                 </button>
               );
             })}

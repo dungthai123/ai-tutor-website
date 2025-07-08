@@ -7,7 +7,7 @@ import { TestContentArea } from './TestContentArea';
 import { TestNavigationSidebar } from './TestNavigationSidebar';
 import { TestSubmissionModal } from './TestSubmissionModal';
 
-export function TestContainer({ testType, testId, onBack }: TestContainerProps) {
+export function TestContainer({ testType, testId, onBack, mode = 'practice' }: TestContainerProps) {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   
   // Main test session state and logic
@@ -72,6 +72,7 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
               canSubmitTest={sync.navigationStore.canSubmitTest()}
               onQuestionChange={sync.handleQuestionChange}
               onShowSubmitModal={() => setShowSubmitModal(true)}
+              mode={mode}
             />
           </div>
 
@@ -89,6 +90,7 @@ export function TestContainer({ testType, testId, onBack }: TestContainerProps) 
               canGoNext={sync.navigationStore.canGoNext()}
               canGoPrevious={sync.navigationStore.canGoPrevious()}
               isLastQuestion={sync.navigationStore.isLastQuestion()}
+              hskLevel={state.topic?.level}
             />
           </div>
         </div>

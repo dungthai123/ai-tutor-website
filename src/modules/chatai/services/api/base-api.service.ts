@@ -61,10 +61,29 @@ export class BaseApiService {
         ...config,
       });
       
-      return {
-        success: true,
-        data: response.data,
-      };
+      // Check if the response has the expected API structure
+      if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+        // This is a structured API response with success, data, etc.
+        const apiResponse = response.data as { success: boolean; data?: T; message?: string; error?: string };
+        
+        if (apiResponse.success) {
+          return {
+            success: true,
+            data: apiResponse.data,
+          };
+        } else {
+          return {
+            success: false,
+            error: apiResponse.message || apiResponse.error || 'API request failed',
+          };
+        }
+      } else {
+        // Direct data response
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       return {

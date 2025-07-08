@@ -7,4 +7,7 @@ export * from './audio';
 
 // Storage Services (will be added in Phase 5)
 // export * from './storage/indexed-db.service';
-// export * from './storage/chat-storage.service'; 
+// export * from './storage/chat-storage.service';
+
+// Task Services
+export { taskCompletionService } from './task-completion.service'; 

@@ -11,6 +11,7 @@ import { useAudioRecorder } from '../../hooks/audio/use-audio-recorder';
 import { useSpeechToText } from '../../hooks/audio/use-speech-to-text';
 import { useChat } from '../../hooks/chat/use-chat';
 import { useChatStore } from '../../hooks/storage/chat-store';
+import { useSpeechToTextContext } from '../../contexts/SpeechToTextContext';
 
 export function NewChatInput() {
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
@@ -30,6 +31,9 @@ export function NewChatInput() {
     isOpenHint, 
     hintMessage 
   } = useChatStore();
+  
+  // Speech-to-text tracking
+  const { markAsSpeechToText } = useSpeechToTextContext();
 
   const handleSendText = useCallback(async () => {
     if (!textInput.trim() || isAwaitingResponse) return;
@@ -102,6 +106,10 @@ export function NewChatInput() {
           const transcription = await transcribeAudio(recorderState.audioBlob!);
           if (transcription) {
             console.log('✅ Transcription successful:', transcription);
+            
+            // Mark this message as coming from speech-to-text
+            markAsSpeechToText(transcription);
+            
             await sendMessage(transcription, recorderState.audioUrl!);
             
             // Clear recording after successful send
@@ -116,7 +124,7 @@ export function NewChatInput() {
       
       processRecording();
     }
-  }, [recorderState.isRecording, recorderState.audioBlob, recorderState.audioUrl, transcribeAudio, sendMessage, clearRecording]);
+  }, [recorderState.isRecording, recorderState.audioBlob, recorderState.audioUrl, transcribeAudio, sendMessage, clearRecording, markAsSpeechToText]);
 
   const handleKeyboardToggle = useCallback(() => {
     setInputMode(prev => prev === 'voice' ? 'text' : 'voice');

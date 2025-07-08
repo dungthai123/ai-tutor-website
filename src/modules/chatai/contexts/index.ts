@@ -1,0 +1,1 @@
+export { SpeechToTextProvider, useSpeechToTextContext } from './SpeechToTextContext'; 

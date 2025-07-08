@@ -36,6 +36,7 @@ interface PracticeDetailState {
   isShowAnswerFeedback: boolean;
   isAnswerCorrect: boolean;
   fontSize: FontSize;
+  isTextSegmentEnabled: boolean;
   
   // Timer
   currentTime: number;
@@ -62,6 +63,7 @@ interface PracticeDetailState {
   toggleExplanation: () => void;
   toggleTranscript: () => void;
   setFontSize: (size: FontSize) => void;
+  toggleTextSegment: () => void;
   startTimer: () => void;
   pauseTimer: () => void;
   updateTimer: () => void;
@@ -107,6 +109,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
       isShowAnswerFeedback: false,
       isAnswerCorrect: false,
       fontSize: 'small' as FontSize,
+      isTextSegmentEnabled: false,
       
       currentTime: 0,
       totalTime: 1800,
@@ -280,6 +283,12 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
       setFontSize: (size: FontSize) => {
         set({ fontSize: size });
       },
+
+      toggleTextSegment: () => {
+        set(state => ({
+          isTextSegmentEnabled: !state.isTextSegmentEnabled
+        }));
+      },
       
       startTimer: () => {
         set({ isTimerRunning: true });
@@ -345,6 +354,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
           isShowAnswerFeedback: false,
           isAnswerCorrect: false,
           fontSize: 'small' as FontSize,
+          isTextSegmentEnabled: false,
         });
       },
       

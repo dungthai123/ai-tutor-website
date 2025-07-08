@@ -2,8 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { PracticeType } from '@/modules/practice/types';
-import { TestContainer } from '@/modules/practice/components';
-import { useTestSession } from '@/modules/practice/hooks';
+import { useEffect } from 'react';
 
 export default function TestPage() {
   const params = useParams();
@@ -12,22 +11,17 @@ export default function TestPage() {
   const testType = params.type as PracticeType;
   const testId = params.id as string;
 
-  const { state } = useTestSession(testType, testId);
-
-  const handleBack = () => {
-    if (confirm('Are you sure you want to exit the test? Your progress will be lost.')) {
-      const level = state.topic?.level || 'HSK1';
-      router.push(`/practice/${testType}?level=${level}`);
-    }
-  };
+  // Redirect to intro page
+  useEffect(() => {
+    router.replace(`/practice/${testType}/test/${testId}/intro`);
+  }, [router, testType, testId]);
 
   return (
-
-      <TestContainer
-        testType={testType}
-        testId={testId}
-        onBack={handleBack}
-      />
-
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Redirecting to test introduction...</p>
+      </div>
+    </div>
   );
 } 

@@ -9,7 +9,7 @@ interface ChatInputBarProps {
 export function ChatInputBar({ children, className }: ChatInputBarProps) {
   return (
     <div className={cn(
-      'relative h-28 bg-white/90 backdrop-blur-sm border-t border-gray-200 z-20',
+      'relative h-28 border-t border-gray-200 z-20',
       'pb-[env(safe-area-inset-bottom)]',
       className
     )}>

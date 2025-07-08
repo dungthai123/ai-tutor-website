@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { ReadingQuestionProps } from './types';
 import { TextAndTranslate } from '../../shared/TextAndTranslate';
 import { AspectRatioImage } from '../../shared/AspectRatioImage';
@@ -6,8 +7,56 @@ export function WrongSentenceQuestion({ quizModel, isShowTranslation, fontClasse
   // Helper to check if passage is valid and not empty
   const hasValidPassage = quizModel.passage && quizModel.passage.trim() !== '' && quizModel.passage !== quizModel.question;
 
+  // Animation state for content changes
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevContentHashRef = useRef<string>('');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Create a content hash to detect actual content changes
+  const createContentHash = () => {
+    const contentParts = [
+      quizModel.question || '',
+      quizModel.passage || '',
+      quizModel.imageUrl || '',
+      quizModel.readingTranslation || '',
+      quizModel.readingTranslationContext || ''
+    ];
+    return contentParts.join('::');
+  };
+
+  // Track question changes and trigger slide animation only when content actually changes
+  useEffect(() => {
+    const currentContentHash = createContentHash();
+    const prevContentHash = prevContentHashRef.current;
+    
+    // Only animate if the content actually changed
+    if (prevContentHash && currentContentHash !== prevContentHash) {
+      setIsAnimating(true);
+      
+      // Reset animation after duration
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 100); // 0.1 seconds
+      
+      prevContentHashRef.current = currentContentHash;
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Update ref without animation if content is the same
+      prevContentHashRef.current = currentContentHash;
+    }
+  }, [quizModel.question, quizModel.passage, quizModel.imageUrl, quizModel.readingTranslation, quizModel.readingTranslationContext]);
+
   return (
-    <div className="wrong-sentence-question">
+    <div 
+      ref={contentRef}
+      className={`wrong-sentence-question transition-transform duration-100 ease-out ${
+        isAnimating ? 'animate-slide-in-right' : ''
+      }`}
+      style={{
+        '--slide-distance': '20px'
+      } as React.CSSProperties}
+    >
       <div className="mb-4 p-4 pb-2 bg-red-50 rounded-lg border-l-4 border-red-400">
         <h4 className="font-semibold text-red-800 mb-2">🔍 Find the Error</h4>
       </div>
@@ -46,6 +95,24 @@ export function WrongSentenceQuestion({ quizModel, isShowTranslation, fontClasse
           />
         </div>
       )}
+
+      {/* Custom CSS for slide animations */}
+      <style jsx>{`
+        @keyframes slide-in-right {
+          0% {
+            transform: translateX(var(--slide-distance));
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in-right {
+          animation: slide-in-right 0.1s ease-out;
+        }
+      `}</style>
     </div>
   );
 } 

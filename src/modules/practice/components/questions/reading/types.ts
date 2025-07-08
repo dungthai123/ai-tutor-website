@@ -4,6 +4,7 @@ export interface ReadingQuestionProps {
   quizModel: ReadingQuizModel;
   isShowTranslation?: boolean;
   isShowExplanation?: boolean;
+  isTextSegmentEnabled?: boolean;
   fontClasses?: {
     questionText: string;
     answerText: string;

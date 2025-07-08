@@ -1,13 +1,9 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  useChat, 
-  useChatStorage, 
-  useTextToSpeech,
-  useChatStore,
-  useSettingsStore
-} from '@/modules/chatai/hooks';
-import { chatApiService } from '@/modules/chatai/services';
+import { useChat, useChatStore } from '../index';
+import { useTextToSpeech } from '../audio/use-text-to-speech';
+import { useSettingsStore } from '../storage/settings-store';
+import { chatApiService } from '../../services';
 import { TopicDetail } from '@/modules/chatai/types';
 
 interface UseChatPageProps {
@@ -32,9 +28,8 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
   const playedMessagesRef = useRef<Set<string>>(new Set());
   
   // Hooks
-  const { messages, isEndConversation, clearMessages } = useChatStore();
-  const { initializeConversation } = useChat();
-  const { saveConversation } = useChatStorage();
+  const { messages, isEndConversation } = useChatStore();
+  const { initializeConversation, resetConversation } = useChat();
   const { playTTS } = useTextToSpeech();
   const { isAutoPlayTTS } = useSettingsStore();
   
@@ -57,7 +52,7 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
       setError(null);
       initializingRef.current = false;
       currentConversationRef.current = '';
-      clearMessages();
+      resetConversation();
       playedMessagesRef.current.clear();
       setIsPageReady(false);
     } else if (!currentConversationRef.current) {
@@ -67,11 +62,11 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
       setError(null);
       initializingRef.current = false;
       currentConversationRef.current = '';
-      clearMessages();
+      resetConversation();
       playedMessagesRef.current.clear();
       setIsPageReady(false);
     }
-  }, [conversationId, topicId, categoryId, clearMessages]);
+  }, [conversationId, topicId, categoryId, resetConversation]);
   
   // Initialize conversation
   useEffect(() => {
@@ -146,13 +141,6 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
 
     initChat();
   }, [conversationId, topicId, categoryId, isInitialized, initializeConversation]);
-  
-  // Save conversation when it ends
-  useEffect(() => {
-    if (isEndConversation && messages.length > 0 && topicDetail) {
-      saveConversation(conversationId, messages, topicDetail);
-    }
-  }, [isEndConversation, messages, topicDetail, conversationId, saveConversation]);
   
   // Set page ready state after component is fully mounted and rendered
   useLayoutEffect(() => {

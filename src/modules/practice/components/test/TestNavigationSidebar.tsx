@@ -25,6 +25,7 @@ interface TestNavigationSidebarProps {
   topic?: PracticeTopicModel | null;
   timeElapsed: number;
   onExit: () => void;
+  mode?: 'practice' | 'test';
 }
 
 export function TestNavigationSidebar({
@@ -37,7 +38,8 @@ export function TestNavigationSidebar({
   onShowSubmitModal,
   topic,
   timeElapsed,
-  onExit
+  onExit,
+  mode = 'practice'
 }: TestNavigationSidebarProps) {
   const totalTime = topic ? getTotalTimeForLevel(topic.level) : 0;
   const timeRemaining = totalTime > 0 ? Math.max(totalTime - timeElapsed, 0) : 0;
@@ -58,18 +60,26 @@ export function TestNavigationSidebar({
           </div>
         )}
 
-        {/* Timer Section */}
+        {/* Timer Section - Show for both modes but different styling */}
         <div className="mb-4 grid grid-cols-2 gap-2">
-          <div className="bg-blue-50 rounded-lg p-2 text-center">
-            <div className="text-xs text-gray-600">Remaining</div>
-            <div className="text-lg font-mono font-semibold text-gray-800">
-              {format(timeRemaining)}
+          <div className={`rounded-lg p-2 text-center ${
+            mode === 'test' ? 'bg-red-50' : 'bg-blue-50'
+          }`}>
+            <div className="text-xs text-gray-600">
+              {mode === 'test' ? 'Remaining' : 'Time Spent'}
+            </div>
+            <div className={`text-lg font-mono font-semibold ${
+              mode === 'test' ? 'text-red-800' : 'text-gray-800'
+            }`}>
+              {mode === 'test' ? format(timeRemaining) : format(timeElapsed)}
             </div>
           </div>
           <div className="bg-blue-50 rounded-lg p-2 text-center">
-            <div className="text-xs text-gray-600">Elapsed</div>
+            <div className="text-xs text-gray-600">
+              {mode === 'test' ? 'Elapsed' : 'Mode'}
+            </div>
             <div className="text-lg font-mono font-semibold text-gray-800">
-              {format(timeElapsed)}
+              {mode === 'test' ? format(timeElapsed) : mode === 'practice' ? 'Practice' : 'Test'}
             </div>
           </div>
         </div>

@@ -69,7 +69,6 @@ export const TopicCategoryList: React.FC<TopicCategoryListProps> = ({
                       ? 'bg-white bg-opacity-20 text-white' 
                       : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {category.topicDetails.length}
                   </span>
                 )}
               </span>

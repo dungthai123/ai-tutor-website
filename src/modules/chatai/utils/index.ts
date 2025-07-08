@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { JiebaCollection, JiebaSegment } from '../types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -54,7 +55,39 @@ export const chatUtils = {
 
   extractTextFromJiebaCollection: (collection: { original: string; segments: unknown[] }): string => {
     return collection.original;
-  }
+  },
+
+  // Transform API response to JiebaCollection format
+  transformApiResponseToJiebaCollection: (apiData: { original: string; segments: (string | JiebaSegment)[] }): JiebaCollection => {
+    // Handle case where segments is an array of strings (from API)
+    if (Array.isArray(apiData.segments) && apiData.segments.length > 0) {
+      const segments = apiData.segments.map((segment: string | JiebaSegment) => {
+        if (typeof segment === 'string') {
+          // Convert string to JiebaSegment
+          return {
+            word: segment,
+            pinyin: undefined,
+            translation: undefined,
+            explanation: undefined,
+          };
+        } else {
+          // Already a JiebaSegment object
+          return segment;
+        }
+      });
+
+      return {
+        original: apiData.original,
+        segments,
+      };
+    }
+
+    // Fallback: create segments from original text if no segments provided
+    return {
+      original: apiData.original,
+      segments: [],
+    };
+  },
 };
 
 // Format utility functions
@@ -115,17 +148,46 @@ export const errorUtils = {
   }
 };
 
-// Storage utilities
+// Storage utility functions
 export const storageUtils = {
   generateChatSessionId: (): string => {
-    return `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   },
 
-  formatDateForStorage: (date: Date): string => {
-    return date.toISOString();
+  saveChatHistory: (conversationId: string, messages: unknown[]): void => {
+    if (typeof window !== 'undefined') {
+      const key = `chat-history-${conversationId}`;
+      localStorage.setItem(key, JSON.stringify(messages));
+    }
   },
 
-  parseStorageDate: (dateString: string): Date => {
-    return new Date(dateString);
-  }
+  loadChatHistory: (conversationId: string): unknown[] => {
+    if (typeof window !== 'undefined') {
+      const key = `chat-history-${conversationId}`;
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    }
+    return [];
+  },
+
+  clearChatHistory: (conversationId: string): void => {
+    if (typeof window !== 'undefined') {
+      const key = `chat-history-${conversationId}`;
+      localStorage.removeItem(key);
+    }
+  },
+
+  saveUserPreferences: (preferences: Record<string, unknown>): void => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user-preferences', JSON.stringify(preferences));
+    }
+  },
+
+  loadUserPreferences: (): Record<string, unknown> => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('user-preferences');
+      return stored ? JSON.parse(stored) : {};
+    }
+    return {};
+  },
 }; 

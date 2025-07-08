@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Languages, Volume2, Play } from 'lucide-react';
+import { Languages, Volume2, Play, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { PronunciationDisplay } from '../audio/PronunciationDisplay';
 import { useTextToSpeech } from '../../hooks/audio/use-text-to-speech';
@@ -10,6 +10,7 @@ import { useTranslation } from '../../hooks/api/use-translation';
 import { useChatStore } from '../../hooks/storage/chat-store';
 import { useSettingsStore } from '../../hooks/storage/settings-store';
 import { cn } from '../../utils';
+import { useChat } from '../../hooks/chat/use-chat';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -32,8 +33,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     showImprovedText,
     showPronunciationAssessment,
     setShowTranslatedText,
+    setShowImprovedText,
     updateMessage,
+    loadingStates,
   } = useChatStore();
+  const { improveMessage } = useChat();
 
   const handlePlayTTS = async () => {
     if (isPlayingTTS) {
@@ -78,6 +82,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       } catch (error) {
         console.error('Failed to play recorded audio:', error);
       }
+    }
+  };
+
+  const handleImprove = async () => {
+    if (message.suggestContent) {
+      // Toggle visibility if improvement already exists
+      setShowImprovedText(message.id, !showImprovedText[message.id]);
+      return;
+    }
+
+    try {
+      await improveMessage(message.id);
+    } catch (error) {
+      console.error('Failed to improve message:', error);
     }
   };
 
@@ -176,6 +194,27 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     <Volume2 className="h-3 w-3" />
                   )}
                 </button>
+
+                {/* Improvement Button (User messages only) */}
+                {message.isUserMessage && (
+                  <button
+                    onClick={handleImprove}
+                    disabled={loadingStates.isImproving[message.id]}
+                    className={cn(
+                      'p-1 rounded-full transition-colors',
+                      showImprovedText[message.id]
+                        ? 'bg-green-500 text-white'
+                        : 'hover:bg-blue-600 text-blue-100 hover:text-white'
+                    )}
+                    title="Improve message"
+                  >
+                    {loadingStates.isImproving[message.id] ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
 
                 {/* Translation Button */}
                 <button

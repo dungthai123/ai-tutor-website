@@ -283,6 +283,7 @@ export interface TestContainerProps {
   testType: PracticeType;
   testId: string;
   onBack: () => void;
+  mode?: 'practice' | 'test';
 }
 
 export interface QuestionNavigationProps {

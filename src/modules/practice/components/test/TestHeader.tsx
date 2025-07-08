@@ -1,10 +1,34 @@
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { usePracticeDetailStore, FontSize } from '@/lib/stores/practiceDetailStore';
-
+import { useState, useEffect } from 'react';
 
 
 export function TestHeader() {
-  const { fontSize, setFontSize } = usePracticeDetailStore();
+  const { fontSize, setFontSize, isTextSegmentEnabled, toggleTextSegment } = usePracticeDetailStore();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const fontSizeButtons: { size: FontSize; label: string; icon: string }[] = [
     { size: 'small', label: 'Small', icon: '🔍' },
@@ -34,6 +58,30 @@ export function TestHeader() {
               <span>{label}</span>
             </Button>
           ))}
+          <Button
+            variant={isTextSegmentEnabled ? "primary" : "secondary"}
+            onClick={toggleTextSegment}
+            className={`text-xs px-3 py-1 flex items-center gap-1 ${
+              isTextSegmentEnabled 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>🀄</span>
+            <span>{isTextSegmentEnabled ? 'Hide Pinyin' : 'Show Pinyin'}</span>
+          </Button>
+          <Button
+            variant={isFullscreen ? "primary" : "secondary"}
+            onClick={toggleFullscreen}
+            className={`text-xs px-3 py-1 flex items-center gap-1 ${
+              isFullscreen 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>{isFullscreen ? '🗗' : '🖥️'}</span>
+            <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+          </Button>
         </div>
       </div>
     </div>

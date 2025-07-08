@@ -20,4 +20,13 @@ export * from './api/use-improvement';
 export * from './audio';
 
 // Topic hooks
-export * from './topics'; 
+export * from './topics';
+
+// History Hooks
+export * from './history';
+
+// Task Hooks
+export { useTasks } from './useTasks';
+
+// Speech-to-Text Tracking
+export { useSpeechToTextTracker } from './useSpeechToTextTracker'; 

@@ -107,7 +107,7 @@ export function AnswerSection({
                   </div>
                 )}
                 
-                <div className={`font-semibold ${fontClasses.answerText}`}>
+                <div className={` ${fontClasses.answerText}`}>
                    {option.text}
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function AnswerSection({
                   className="w-12 h-12 object-cover rounded-lg"
                 />
               )} */}
-              <span className={`font-semibold ${fontClasses.answerText}`}>
+              <span className={` ${fontClasses.answerText}`}>
                {option.text}
               </span>
             </div>
@@ -168,7 +168,7 @@ export function AnswerSection({
           <button
             key={option.id}
             onClick={() => onAnswerSelected(index)}
-            className={`p-4 rounded-xl text-left font-semibold transition-all ${
+            className={`p-4 rounded-xl text-left transition-all ${
               isSelected && !showCorrectness
                 ? 'bg-blue-600 text-white shadow-md'
                 : showCorrectness && isCorrect
@@ -209,7 +209,7 @@ export function AnswerSection({
 
   return (
     <div className="">
-      <div className="mb-6">
+      <div className="">
         {renderAnswers()}
       </div>
 

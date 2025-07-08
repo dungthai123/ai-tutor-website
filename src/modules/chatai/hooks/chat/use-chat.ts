@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useChatStore } from '../storage/chat-store';
-import { useSettingsStore } from '../storage/settings-store';
+import { useChatStorage } from '../storage/use-chat-storage';
 import { chatApiService } from '../../services';
-import { ChatMessage, TopicDetail, JiebaCollection } from '../../types';
+import { ChatMessage, TopicDetail } from '../../types';
 import { chatUtils, storageUtils } from '../../utils';
 
 export function useChat() {
   const chatStore = useChatStore();
-  const settingsStore = useSettingsStore();
+  const { autoSaveConversation } = useChatStorage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const mainChat = useRef(true);
 
@@ -25,6 +25,7 @@ export function useChat() {
         chatStore.setTopicDetail(topicDetail);
         chatStore.setChatSessionId(newChatSessionId);
         chatStore.clearMessages();
+        chatStore.setEndConversation(false);
         chatStore.setAwaitingResponse(true);
 
         const response = await chatApiService.initialMessage({
@@ -37,8 +38,8 @@ export function useChat() {
           console.log('🤖 Bot message created:', response.data);
           console.log('🔍 Response data type:', typeof response.data);
           
-          // Handle nested response structure from backend
-          const messageData = (response.data as { data?: JiebaCollection } & JiebaCollection).data || response.data;
+          // Transform API response to proper JiebaCollection format
+          const messageData = chatUtils.transformApiResponseToJiebaCollection(response.data);
           console.log('🔍 Message data:', messageData);
           console.log('🔍 Message data original:', messageData.original);
           console.log('🔍 Message data original type:', typeof messageData.original);
@@ -124,8 +125,8 @@ export function useChat() {
           console.log('✅ Processing successful response:', response.data);
           console.log('🔍 Response data type:', typeof response.data);
           
-          // Handle nested response structure from backend
-          const messageData = (response.data as { data?: JiebaCollection } & JiebaCollection).data || response.data;
+          // Transform API response to proper JiebaCollection format
+          const messageData = chatUtils.transformApiResponseToJiebaCollection(response.data);
           console.log('🔍 Message data:', messageData);
           console.log('🔍 Message data original:', messageData.original);
           console.log('🔍 Message data original type:', typeof messageData.original);
@@ -158,79 +159,105 @@ export function useChat() {
           throw new Error(response.error || 'Failed to send message');
         }
       } catch (error) {
-        console.error('💥 sendMessage error:', error);
-        const errorMessage: ChatMessage = {
-          id: Date.now() + 1,
-          content: {
-            original: 'Sorry, I encountered an error. Please try again.',
-            segments: [],
-          },
-          isUserMessage: false,
-          timestamp: Date.now(),
-        };
-        chatStore.addMessage(errorMessage);
+        console.error('❌ Error in sendMessage:', error);
+        throw error;
       } finally {
         chatStore.setAwaitingResponse(false);
       }
     },
-    [chatStore.addMessage, chatStore.setAwaitingResponse, chatStore.chatSessionId, chatStore.conversationId, chatStore.topicDetail, chatStore.setEndConversation]
+    [
+      chatStore.addMessage,
+      chatStore.setAwaitingResponse,
+      chatStore.setEndConversation,
+      chatStore.chatSessionId,
+      chatStore.conversationId,
+      chatStore.topicDetail?.topicId,
+    ]
   );
 
   // Get hint
   const getHint = useCallback(async () => {
-    if (!chatStore.topicDetail) return;
-
-    chatStore.toggleHint();
-    chatStore.setHintMessage(null);
-
-    const lastMessage = chatStore.messages[chatStore.messages.length - 1];
-    const lastMessageText = lastMessage?.content.original || '';
-
     try {
+      chatStore.toggleHint();
+      
+      // Get the last user message for context
+      const lastMessage = chatStore.messages[chatStore.messages.length - 1];
+      const lastMessageText = lastMessage?.content.original || '';
+      
       const response = await chatApiService.getHint({
         conversationId: chatStore.conversationId,
-        topicId: chatStore.topicDetail.topicId,
+        topicId: chatStore.topicDetail?.topicId || 0,
         chatSessionId: chatStore.chatSessionId,
         message: lastMessageText,
       });
 
       if (response.success && response.data) {
-        chatStore.setHintMessage(response.data);
+        console.log('💡 Hint API Response:', response);
+        
+        // Transform API response to proper JiebaCollection format
+        const hintData = chatUtils.transformApiResponseToJiebaCollection(response.data);
+        console.log('💡 Transformed hint data:', hintData);
+        
+        chatStore.setHintMessage(hintData);
+      } else {
+        console.error('❌ Hint API Error:', response.error);
+        throw new Error(response.error || 'Failed to get hint');
       }
     } catch (error) {
-      console.error('Failed to get hint:', error);
+      console.error('❌ Error getting hint:', error);
+      throw error;
     }
-  }, [chatStore.topicDetail, chatStore.toggleHint, chatStore.setHintMessage, chatStore.messages, chatStore.conversationId, chatStore.chatSessionId]);
+  }, [
+    chatStore.toggleHint,
+    chatStore.setHintMessage,
+    chatStore.messages,
+    chatStore.conversationId,
+    chatStore.topicDetail?.topicId,
+    chatStore.chatSessionId,
+  ]);
 
-  // Submit hint as message
-  const submitHint = useCallback(() => {
-    console.log('🎯 submitHint called');
-    console.log('🔍 Current hint message:', chatStore.hintMessage);
-    
-    if (chatStore.hintMessage) {
-      const hintText = chatStore.hintMessage.original;
-      console.log('💡 Submitting hint as message:', hintText);
+  // Submit hint
+  const submitHint = useCallback(
+    async () => {
+      console.log('🔧 submitHint called');
       
-      sendMessage(hintText);
-      chatStore.toggleHint();
+      if (!chatStore.hintMessage) {
+        console.warn('❌ No hint message available');
+        return;
+      }
+
+      console.log('💡 Submitting hint message:', chatStore.hintMessage);
+      
+      // Extract the original text for submission
+      const hintText = chatStore.hintMessage.original;
+      console.log('📝 Hint text to submit:', hintText);
+      
+      if (!hintText || typeof hintText !== 'string') {
+        console.error('❌ Invalid hint text:', { hintText, type: typeof hintText });
+        return;
+      }
+
+      // Clear hint and submit as regular message
       chatStore.setHintMessage(null);
-    } else {
-      console.warn('⚠️ No hint message available to submit');
-    }
-  }, [chatStore.hintMessage, sendMessage, chatStore.toggleHint, chatStore.setHintMessage]);
+      chatStore.toggleHint();
+      
+      await sendMessage(hintText);
+    },
+    [chatStore.hintMessage, chatStore.setHintMessage, chatStore.toggleHint, sendMessage]
+  );
 
   // Translate message
   const translateMessage = useCallback(
     async (messageId: number) => {
-      const message = chatStore.messages.find((m) => m.id === messageId);
-      if (!message) return;
+      const message = chatStore.messages.find((msg) => msg.id === messageId);
+      if (!message || !message.content?.original) return;
 
       chatStore.setLoadingState('isTranslating', messageId, true);
 
       try {
         const response = await chatApiService.translateText(
           message.content.original,
-          settingsStore.language
+          'vi' // Default to Vietnamese
         );
 
         if (response.success && response.data) {
@@ -240,27 +267,25 @@ export function useChat() {
           chatStore.setShowTranslatedText(messageId, true);
         }
       } catch (error) {
-        console.error('Failed to translate message:', error);
+        console.error('Translation error:', error);
       } finally {
         chatStore.setLoadingState('isTranslating', messageId, false);
       }
     },
-    [chatStore, settingsStore.language]
+    [chatStore.messages, chatStore.setLoadingState, chatStore.updateMessage, chatStore.setShowTranslatedText]
   );
 
   // Improve message
   const improveMessage = useCallback(
     async (messageId: number) => {
-      const message = chatStore.messages.find((m) => m.id === messageId);
-      if (!message || !message.isUserMessage) return;
+      const message = chatStore.messages.find((msg) => msg.id === messageId);
+      if (!message || !message.content?.original || !message.isUserMessage) return;
 
-      const messageIndex = chatStore.messages.findIndex(
-        (m) => m.id === messageId
-      );
-      const previousMessage =
-        messageIndex > 0 ? chatStore.messages[messageIndex - 1] : null;
-
-      if (!previousMessage) return;
+      // Find the previous bot message (question)
+      const messageIndex = chatStore.messages.findIndex((msg) => msg.id === messageId);
+      const previousMessage = messageIndex > 0 ? chatStore.messages[messageIndex - 1] : null;
+      
+      if (!previousMessage || previousMessage.isUserMessage) return;
 
       chatStore.setLoadingState('isImproving', messageId, true);
 
@@ -280,38 +305,75 @@ export function useChat() {
           chatStore.setShowImprovedText(messageId, true);
         }
       } catch (error) {
-        console.error('Failed to improve message:', error);
+        console.error('Improvement error:', error);
       } finally {
         chatStore.setLoadingState('isImproving', messageId, false);
       }
     },
-    [chatStore]
+    [
+      chatStore.messages,
+      chatStore.setLoadingState,
+      chatStore.updateMessage,
+      chatStore.setShowImprovedText,
+      chatStore.conversationId,
+      chatStore.topicDetail?.topicId,
+      chatStore.chatSessionId,
+    ]
   );
 
   // Get conversation feedback
   const getConversationFeedback = useCallback(async () => {
-    if (!chatStore.topicDetail) return null;
-
-    chatStore.setGeneratingFeedback(true);
-
     try {
+      chatStore.setGeneratingFeedback(true);
+      
       const response = await chatApiService.getFeedback({
         conversationId: chatStore.conversationId,
-        topicId: chatStore.topicDetail.topicId,
+        topicId: chatStore.topicDetail?.topicId || 0,
         chatSessionId: chatStore.chatSessionId,
       });
 
       if (response.success && response.data) {
         return response.data;
+      } else {
+        throw new Error(response.error || 'Failed to get feedback');
       }
     } catch (error) {
-      console.error('Failed to get conversation feedback:', error);
+      console.error('Error getting conversation feedback:', error);
+      throw error;
     } finally {
       chatStore.setGeneratingFeedback(false);
     }
+  }, [
+    chatStore.setGeneratingFeedback,
+    chatStore.conversationId,
+    chatStore.topicDetail?.topicId,
+    chatStore.chatSessionId,
+  ]);
 
-    return null;
-  }, [chatStore]);
+  // Auto-save conversation after each message using chatSessionId as unique key
+  useEffect(() => {
+    const saveConversation = async () => {
+      if (chatStore.messages.length > 0 && chatStore.chatSessionId && chatStore.topicDetail) {
+        console.log('💾 Auto-saving conversation with', chatStore.messages.length, 'messages using sessionId:', chatStore.chatSessionId);
+        try {
+          // Use chatSessionId as the unique storage key to prevent duplicates
+          await autoSaveConversation(
+            chatStore.chatSessionId, // Use unique session ID instead of conversationId
+            chatStore.messages,
+            chatStore.topicDetail
+          );
+          console.log('✅ Conversation auto-saved successfully with key:', chatStore.chatSessionId);
+        } catch (error) {
+          console.error('❌ Failed to auto-save conversation:', error);
+        }
+      }
+    };
+
+    // Debounce the save operation to avoid excessive saves
+    const timeoutId = setTimeout(saveConversation, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [chatStore.messages.length, chatStore.chatSessionId, chatStore.topicDetail, autoSaveConversation]);
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {

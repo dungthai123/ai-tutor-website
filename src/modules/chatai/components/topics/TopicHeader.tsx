@@ -14,7 +14,7 @@ export const TopicHeader: React.FC = () => {
         transition={{ duration: 0.6 }}
       >
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          🤖 Chat AI Assistant
+          🤖 AI Speaking Tutor
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
           Practice conversations with AI in various topics. Improve your speaking, 

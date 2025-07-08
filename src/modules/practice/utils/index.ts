@@ -28,22 +28,22 @@ export const getImageUrl = (imageUrl: string): string => {
 export const getFontSizeClasses = (fontSize: FontSize) => {
   const fontSizeMap = {
     small: {
-      questionText: 'text-base',
-      answerText: 'text-base',
-      transcriptText: 'text-base',
-      passageText: 'text-base',
-    },
-    medium: {
       questionText: 'text-lg',
-      answerText: 'text-lg', 
+      answerText: 'text-base',
       transcriptText: 'text-lg',
       passageText: 'text-lg',
     },
-    large: {
+    medium: {
       questionText: 'text-xl',
-      answerText: 'text-xl',
-      transcriptText: 'text-xl', 
+      answerText: 'text-lg', 
+      transcriptText: 'text-xl',
       passageText: 'text-xl',
+    },
+    large: {
+      questionText: 'text-2xl',
+      answerText: 'text-xl',
+      transcriptText: 'text-2xl', 
+      passageText: 'text-2xl',
     }
   };
 

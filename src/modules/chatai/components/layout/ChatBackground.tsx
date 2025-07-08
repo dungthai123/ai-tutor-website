@@ -21,7 +21,7 @@ export function ChatBackground({ imageBackground }: ChatBackgroundProps) {
         className="object-cover"
         priority
       />
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-black opacity-60" />
     </div>
   );
 } 

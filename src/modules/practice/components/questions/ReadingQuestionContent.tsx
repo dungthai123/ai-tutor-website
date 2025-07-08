@@ -14,7 +14,7 @@
  * - Default: Falls back to general reading question handler
  */
 
-import { ReadingQuizModel, TypeAnswer, ReadingQuestionType } from '../../types';
+import { ReadingQuizModel, TypeAnswer, ReadingQuestionType, HSKLevel } from '../../types';
 import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
 import { ImageGrid } from '../shared';
 import { getFontSizeClasses } from '../../utils';
@@ -33,15 +33,18 @@ interface ReadingQuestionContentProps {
   quizModel: ReadingQuizModel;
   questionIndex: number;
   totalQuestions: number;
+  hskLevel?: HSKLevel;
 }
 
 export function ReadingQuestionContent({ 
   quizModel, 
+  hskLevel
 }: ReadingQuestionContentProps) {
   const {
     isShowTranslation,
     isShowExplanation,
     fontSize,
+    isTextSegmentEnabled,
   } = usePracticeDetailStore();
 
   const fontClasses = getFontSizeClasses(fontSize);
@@ -52,7 +55,8 @@ export function ReadingQuestionContent({
       quizModel,
       isShowTranslation,
       isShowExplanation,
-      fontClasses
+      fontClasses,
+      isTextSegmentEnabled
     };
 
     switch (quizModel.questionType) {
@@ -65,8 +69,13 @@ export function ReadingQuestionContent({
       case ReadingQuestionType.READ_MATCH_PICTURE_WITH_STATEMENT:
         return <PictureMatchingQuestion {...questionProps} />;
       case ReadingQuestionType.READ_MATCH_STATEMENT_WITH_STATEMENT:
+        return <StatementMatchingQuestion {...questionProps} hskLevel={hskLevel} />;
       case ReadingQuestionType.READ_MATCH_MISSING_WORD_WITH_STATEMENT:
-        return <StatementMatchingQuestion {...questionProps} />;
+        // For HSK5, use DefaultReadingQuestion; otherwise use StatementMatchingQuestion
+        if (hskLevel === HSKLevel.HSK5) {
+          return <DefaultReadingQuestion {...questionProps} />;
+        }
+        return <StatementMatchingQuestion {...questionProps} hskLevel={hskLevel} />;
       default:
         return <DefaultReadingQuestion {...questionProps} />;
     }
@@ -102,8 +111,7 @@ export function ReadingQuestionContent({
   };
 
   return (
-    <div>
-
+    <div className="reading-question-content">
       {/* Special image grid for WORD_MATCHING (only if not handled by specific question type) */}
       {renderImageGrid()}
 
@@ -115,13 +123,6 @@ export function ReadingQuestionContent({
         <div className="mb-4 p-4 bg-green-50 rounded border-l-4 border-green-400">
           <h4 className="font-medium text-green-700 mb-2">💡 Explanation</h4>
           <p className="text-green-700">{quizModel.explanation}</p>
-        </div>
-      )}
-
-      {/* Question Type Info */}
-      {quizModel.questionType && (
-        <div className="mt-4 text-xs text-gray-500">
-          Question Type: {quizModel.questionType}
         </div>
       )}
     </div>
