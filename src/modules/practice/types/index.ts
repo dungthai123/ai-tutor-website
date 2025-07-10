@@ -34,6 +34,12 @@ export interface BaseQuizModel {
   readingTranslation?: string;
   correctAnswerTranslation?: string;
   optionListText?: string;
+  localizedContent?: {
+    transcript?: string | null;
+    explanation?: string;
+    transcript_context?: string | null;
+    context?: string;
+  };
 }
 
 // Listening Quiz Model (extends BaseQuizModel)
@@ -219,6 +225,7 @@ export enum ListeningQuestionType {
 
 export enum WritingQuestionType {
   WRITE_ORDERING = 'Write_Ordering',
+  WRITE_HANZI = 'Write_Hanzi',
   WRITE_SENTENCE_FROM_IMAGE = 'Write_SentencefromImage',
   WRITE_COMPLETION = 'Write_Completion',
   WRITE_ESSAY = 'Write_Essay',
@@ -283,7 +290,8 @@ export interface TestContainerProps {
   testType: PracticeType;
   testId: string;
   onBack: () => void;
-  mode?: 'practice' | 'test';
+  mode?: 'practice' | 'test' | 'review';
+  historyData?: TestHistoryItem;
 }
 
 export interface QuestionNavigationProps {
@@ -360,6 +368,7 @@ export interface UseTestSessionReturn {
     goToQuestion: (index: number) => void;
     completeTest: () => void;
     resetTest: () => void;
+    cleanupTest: () => void;
   };
   computed: {
     currentQuestion: QuizModel | null;

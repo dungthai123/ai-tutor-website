@@ -4,11 +4,14 @@ import { audioPlayerService } from '../../services/audio/audio-player.service';
 import { useAudioStore } from '../storage/audio-store';
 
 export const useTextToSpeech = () => {
-  const { setCurrentAudioUrl, setCurrentMessageId } = useAudioStore();
+  const { setCurrentAudioUrl, setCurrentMessageId, setTTSPlaying, resetTTS } = useAudioStore();
 
   const playTTS = useCallback(
     async (text: string, speechRate: number = 1.0, messageId?: number) => {
       try {
+        // Set global TTS playing state
+        setTTSPlaying(true, messageId);
+        
         const blob = await textToSpeechService.generateSpeech(text, speechRate);
         
         if (messageId) {
@@ -16,12 +19,16 @@ export const useTextToSpeech = () => {
         }
         
         await audioPlayerService.playBlob(blob);
+        
+        // Reset TTS state when playback completes
+        setTTSPlaying(false);
       } catch (error) {
         console.error('Failed to play TTS:', error);
+        setTTSPlaying(false);
         throw error;
       }
     },
-    [setCurrentMessageId]
+    [setCurrentMessageId, setTTSPlaying]
   );
 
   const generateTTSUrl = useCallback(
@@ -51,18 +58,25 @@ export const useTextToSpeech = () => {
   const playTTSFromUrl = useCallback(
     async (url: string, messageId?: number) => {
       try {
+        // Set global TTS playing state
+        setTTSPlaying(true, messageId);
+        
         if (messageId) {
           setCurrentMessageId(messageId);
         }
         
         setCurrentAudioUrl(url);
         await audioPlayerService.play(url);
+        
+        // Reset TTS state when playback completes
+        setTTSPlaying(false);
       } catch (error) {
         console.error('Failed to play TTS from URL:', error);
+        setTTSPlaying(false);
         throw error;
       }
     },
-    [setCurrentAudioUrl, setCurrentMessageId]
+    [setCurrentAudioUrl, setCurrentMessageId, setTTSPlaying]
   );
 
   const stopTTS = useCallback(async () => {
@@ -70,10 +84,13 @@ export const useTextToSpeech = () => {
       await audioPlayerService.stop();
       setCurrentAudioUrl(null);
       setCurrentMessageId(null);
+      // Reset global TTS state
+      resetTTS();
     } catch (error) {
       console.error('Failed to stop TTS:', error);
+      resetTTS(); // Still reset state even if stop fails
     }
-  }, [setCurrentAudioUrl, setCurrentMessageId]);
+  }, [setCurrentAudioUrl, setCurrentMessageId, resetTTS]);
 
   const pauseTTS = useCallback(async () => {
     try {

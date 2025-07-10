@@ -102,7 +102,7 @@ export function ProofreadingDetails({ proofreading, className }: ProofreadingDet
           <div className="space-y-2">
             <h5 className="text-sm font-medium text-red-600">Original Text:</h5>
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-gray-700 max-h-32 overflow-y-auto">
-              {proofreading.originalText}
+             <div dangerouslySetInnerHTML={{ __html: proofreading.originalText }} />
             </div>
           </div>
           

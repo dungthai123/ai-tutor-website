@@ -3,7 +3,9 @@ import { ReadingQuestionContent } from '../questions/ReadingQuestionContent';
 import { WritingQuestionContent } from '../questions/WritingQuestionContent';
 import { AnswerSection } from '../answers/AnswerSection';
 import { QuestionNavigation } from './QuestionNavigation';
+import { ExplanationContent } from './ExplanationContent';
 import { PracticeType, ListeningQuizModel, ReadingQuizModel, WritingQuizModel, QuizModel, HSKLevel } from '../../types';
+import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
 
 interface TestContentAreaProps {
   testType: PracticeType;
@@ -36,6 +38,7 @@ export function TestContentArea({
   isLastQuestion,
   hskLevel
 }: TestContentAreaProps) {
+  const { showAnswerAfterEach, isShowExplanationContent } = usePracticeDetailStore();
 
   return (
     <div className="flex flex-col h-full">
@@ -66,19 +69,29 @@ export function TestContentArea({
             />
           )}
         </div>
+
+        {/* Explanation Content - Shows when toggle is enabled */}
+        {isShowExplanationContent && (
+          <div className="mt-4">
+            <ExplanationContent 
+              currentQuestion={currentQuestion}
+              className="mb-4"
+            />
+          </div>
+        )}
       </div>
 
       {/* Answer Section - Fixed at bottom with smaller text */}
-      {testType !== PracticeType.WRITING && (
+          {testType !== PracticeType.WRITING && (
         <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4">
           <div className="text-base">
-            <AnswerSection
-              quizModel={currentQuestion}
-              onAnswerSelected={onAnswerSelected}
+          <AnswerSection
+            quizModel={currentQuestion}
+            onAnswerSelected={onAnswerSelected}
               selectedAnswer={selectedAnswer as number | undefined}
-              showFeedback={false}
-              showTranslation={false}
-            />
+              showFeedback={showAnswerAfterEach}
+            showTranslation={false}
+          />
           </div>
         </div>
       )}

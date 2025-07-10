@@ -18,6 +18,7 @@ export function WritingAnswerInput({ quizModel, onAnswerChange, currentAnswer }:
   
   // For WRITE_ORDERING, use array state for word bank and answer order
   const isOrdering = quizModel.questionType === WritingQuestionType.WRITE_ORDERING;
+  const isHanzi = quizModel.questionType === WritingQuestionType.WRITE_HANZI;
   const originalOrder = quizModel.orderingItems?.map(item => item.replace(/\[|\]/g, '')) || [];
   const [wordBank, setWordBank] = useState<string[]>(originalOrder);
   const [answerOrder, setAnswerOrder] = useState<string[]>(currentAnswer ? currentAnswer.split(' ') : []);
@@ -195,6 +196,28 @@ export function WritingAnswerInput({ quizModel, onAnswerChange, currentAnswer }:
             <p className="text-red-700 text-sm">{scoringError}</p>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // For Write_Hanzi, use a smaller text input
+  if (isHanzi) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Your Answer:</label>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Enter the Chinese character(s)..."
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-lg text-center"
+            style={{ fontFamily: 'serif' }}
+          />
+          <p className="text-xs text-gray-500">
+            Type the Chinese character(s) that correspond to the pinyin in the question.
+          </p>
+        </div>
       </div>
     );
   }

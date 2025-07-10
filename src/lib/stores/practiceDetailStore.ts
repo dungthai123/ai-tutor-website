@@ -32,6 +32,7 @@ interface PracticeDetailState {
   isShowTranslation: boolean;
   isShowExplanation: boolean;
   isShowTranscript: boolean;
+  isShowExplanationContent: boolean;
   isAnswerSelected: boolean;
   isShowAnswerFeedback: boolean;
   isAnswerCorrect: boolean;
@@ -62,8 +63,10 @@ interface PracticeDetailState {
   toggleTranslation: () => void;
   toggleExplanation: () => void;
   toggleTranscript: () => void;
+  toggleExplanationContent: () => void;
   setFontSize: (size: FontSize) => void;
   toggleTextSegment: () => void;
+  toggleShowAnswer: () => void;
   startTimer: () => void;
   pauseTimer: () => void;
   updateTimer: () => void;
@@ -105,6 +108,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
       isShowTranslation: false,
       isShowExplanation: false,
       isShowTranscript: false,
+      isShowExplanationContent: false,
       isAnswerSelected: false,
       isShowAnswerFeedback: false,
       isAnswerCorrect: false,
@@ -280,6 +284,12 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
         }));
       },
       
+      toggleExplanationContent: () => {
+        set(state => ({
+          isShowExplanationContent: !state.isShowExplanationContent
+        }));
+      },
+      
       setFontSize: (size: FontSize) => {
         set({ fontSize: size });
       },
@@ -287,6 +297,12 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
       toggleTextSegment: () => {
         set(state => ({
           isTextSegmentEnabled: !state.isTextSegmentEnabled
+        }));
+      },
+      
+      toggleShowAnswer: () => {
+        set(state => ({
+          showAnswerAfterEach: !state.showAnswerAfterEach
         }));
       },
       
@@ -350,6 +366,7 @@ export const usePracticeDetailStore = create<PracticeDetailState>()(
           isShowTranslation: false,
           isShowExplanation: false,
           isShowTranscript: false,
+          isShowExplanationContent: false,
           isAnswerSelected: false,
           isShowAnswerFeedback: false,
           isAnswerCorrect: false,

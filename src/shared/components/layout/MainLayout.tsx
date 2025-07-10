@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { FloatingActions } from '../ui/overlays/FloatingActions';
 import { ClientOnly } from '../common/ClientOnly';
+import { NavigationLoader } from '../ui/NavigationLoader';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -24,11 +27,14 @@ export function MainLayout({ children, rightPanel, showFloatingActions = true }:
       <ClientOnly>
         <Sidebar />
       </ClientOnly>
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <NavigationLoader />
         <div className="flex-1 px-6 py-8 overflow-y-auto">
           {children}
         </div>
       </main>
+      
       {rightPanel && (
         <aside className="w-80 bg-white border-l border-gray-200 h-full overflow-hidden">
           <div className="p-6 h-full overflow-y-auto">
@@ -36,6 +42,7 @@ export function MainLayout({ children, rightPanel, showFloatingActions = true }:
           </div>
         </aside>
       )}
+      
       {showFloatingActions && <FloatingActions />}
     </div>
   );

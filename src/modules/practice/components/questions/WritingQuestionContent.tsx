@@ -23,6 +23,7 @@ import { WritingAnswerInput } from './writing/WritingAnswerInput';
 // Import specific question type components
 import { 
   WriteOrderingQuestion,
+  WriteHanziQuestion,
   WriteSentenceFromImageQuestion,
   DefaultWritingQuestion
 } from './writing';
@@ -63,6 +64,8 @@ export function WritingQuestionContent({
     switch (quizModel.questionType) {
       case WritingQuestionType.WRITE_ORDERING:
         return <WriteOrderingQuestion {...questionProps} />;
+      case WritingQuestionType.WRITE_HANZI:
+        return <WriteHanziQuestion {...questionProps} />;
       case WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE:
         return <WriteSentenceFromImageQuestion {...questionProps} />;
       case WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS:
@@ -87,6 +90,7 @@ export function WritingQuestionContent({
         {/* Question Type Indicator */}
         <div className="text-sm text-gray-600 mb-4">
           {quizModel.questionType === WritingQuestionType.WRITE_ORDERING && 'Word Ordering'}
+          {quizModel.questionType === WritingQuestionType.WRITE_HANZI && 'Write Hanzi'}
           {quizModel.questionType === WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE && 'Sentence from Image'}
           {quizModel.questionType === WritingQuestionType.WRITE_PASSAGE_FROM_VOCABS && 'Passage from Vocabulary'}
           {quizModel.questionType === WritingQuestionType.WRITE_PASSAGE_FROM_PICTURES && 'Passage from Pictures'}

@@ -4,9 +4,55 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useNotes, useGrammarCheck } from '@/modules/notes/hooks';
-import { Note, NoteStyle, NOTE_STYLES } from '@/modules/notes/types';
+import { Note, NOTE_STYLES } from '@/modules/notes/types';
 import { ProofreadingDetails, GrammarChecker } from '@/modules/notes/components';
+import { DictionaryEntry } from '@/modules/notes/components/DictionaryEntry';
 import { cn } from '@/utils/helpers';
+
+// Function to parse content and extract dictionary entries
+function parseNoteContent(content: string) {
+  const parts: Array<{ type: 'text' | 'dictionary'; content: string; data?: unknown }> = [];
+  const dictionaryRegex = /---DICTIONARY-ENTRY-START---\s*(.*?)\s*---DICTIONARY-ENTRY-END---/g;
+  
+  let lastIndex = 0;
+  let match;
+
+  while ((match = dictionaryRegex.exec(content)) !== null) {
+    // Add text before dictionary entry
+    if (match.index > lastIndex) {
+      const textContent = content.slice(lastIndex, match.index).trim();
+      if (textContent) {
+        parts.push({ type: 'text', content: textContent });
+      }
+    }
+
+    // Parse dictionary entry
+    try {
+      const dictionaryData = JSON.parse(match[1]);
+      parts.push({ 
+        type: 'dictionary', 
+        content: match[0],
+        data: dictionaryData 
+      });
+    } catch (error) {
+      console.error('Error parsing dictionary entry:', error);
+      // If parsing fails, treat as regular text
+      parts.push({ type: 'text', content: match[0] });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < content.length) {
+    const remainingText = content.slice(lastIndex).trim();
+    if (remainingText) {
+      parts.push({ type: 'text', content: remainingText });
+    }
+  }
+
+  return parts;
+}
 
 export default function NoteEditPage() {
   const router = useRouter();
@@ -18,11 +64,14 @@ export default function NoteEditPage() {
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState<NoteStyle>(NOTE_STYLES[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isGrammarCheckEnabled, setIsGrammarCheckEnabled] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Parse note content to handle dictionary entries
+  const contentParts = parseNoteContent(content);
 
   // Load note data
   useEffect(() => {
@@ -32,7 +81,6 @@ export default function NoteEditPage() {
         setNote(foundNote);
         setTitle(foundNote.title);
         setContent(foundNote.content);
-        setSelectedStyle(foundNote.style);
       }
       setIsLoading(false);
     }
@@ -54,12 +102,13 @@ export default function NoteEditPage() {
       const updatedNote = updateNote(note.id, {
         title: title.trim() || 'Untitled Note',
         content,
-        style: selectedStyle,
+        style: NOTE_STYLES,
         updatedAt: new Date().toISOString()
       });
       
       if (updatedNote) {
         setNote(updatedNote);
+        setIsEditing(false);
         // Show success feedback
         setTimeout(() => setIsSaving(false), 500);
       }
@@ -163,6 +212,17 @@ export default function NoteEditPage() {
           
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setIsEditing(!isEditing)}
+              className={cn(
+                'px-4 py-2 rounded-md font-medium transition-colors',
+                isEditing
+                  ? 'bg-orange-600 text-white hover:bg-orange-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              )}
+            >
+              {isEditing ? '👁️ Preview' : '✏️ Edit'}
+            </button>
+            <button
               onClick={() => setIsGrammarCheckEnabled(!isGrammarCheckEnabled)}
               className={cn(
                 'px-4 py-2 rounded-md font-medium transition-colors',
@@ -201,10 +261,8 @@ export default function NoteEditPage() {
           {/* Editor Section */}
           <div className="lg:col-span-2">
             <div className={cn(
-              'rounded-2xl p-6 shadow-sm border border-opacity-50',
-              selectedStyle.backgroundColor,
-              selectedStyle.textColor,
-              selectedStyle.borderColor
+              'rounded-2xl p-6 shadow-sm border border-gray-200',
+              'bg-white text-gray-800'
             )}>
               {/* Title Input */}
               <input
@@ -219,54 +277,72 @@ export default function NoteEditPage() {
                 style={{ color: 'inherit' }}
               />
               
-              {/* Content Textarea */}
-              <textarea
-                value={content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                placeholder="Start writing your note..."
-                className={cn(
-                  'w-full min-h-[400px] bg-transparent border-none outline-none',
-                  'placeholder-opacity-60 resize-none leading-relaxed'
-                )}
-                style={{ color: 'inherit' }}
-              />
-            </div>
-                        <div className="bg-white rounded-2xl p-6 mt-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                🎨 Style
-              </h3>
-              
-              <div className="space-y-3">
-                {Object.values(NOTE_STYLES).map((style: NoteStyle, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedStyle(style)}
-                    className={cn(
-                      'w-full p-4 rounded-lg border-2 transition-all duration-200',
-                      style.backgroundColor,
-                      style.textColor,
-                      style.borderColor,
-                      JSON.stringify(selectedStyle) === JSON.stringify(style)
-                        ? 'ring-2 ring-blue-500 ring-offset-2'
-                        : 'hover:scale-105'
-                    )}
-                  >
-                    <div className="text-left">
-                      <div className="font-medium">Sample Title</div>
-                      <div className="text-sm opacity-80 mt-1">
-                        This is how your note will look...
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {/* Content - Show editor or preview based on mode */}
+              {isEditing ? (
+                /* Content Textarea */
+                <textarea
+                  value={content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  placeholder="Start writing your note..."
+                  className={cn(
+                    'w-full min-h-[400px] bg-transparent border-none outline-none',
+                    'placeholder-opacity-60 resize-none leading-relaxed'
+                  )}
+                  style={{ color: 'inherit' }}
+                />
+              ) : (
+                /* Content Preview with Dictionary Entries */
+                <div className="min-h-[400px] text-gray-700 leading-relaxed">
+                  {contentParts.length === 0 ? (
+                    <div className="text-gray-400 italic">Start writing your note...</div>
+                  ) : (
+                    contentParts.map((part, index) => {
+                      if (part.type === 'dictionary' && part.data) {
+                        const data = part.data as {
+                          word: string;
+                          pinyin: string;
+                          hanNom: string;
+                          wordLevel?: string;
+                          wordType?: string;
+                          meanings: Array<{
+                            meaning: string;
+                            explanation?: string;
+                            examples?: Array<{
+                              word: string;
+                              phonetic: string;
+                              translation: string;
+                            }>;
+                          }>;
+                        };
+                        
+                        return (
+                          <DictionaryEntry
+                            key={index}
+                            word={data.word}
+                            pinyin={data.pinyin}
+                            hanNom={data.hanNom}
+                            wordLevel={data.wordLevel}
+                            wordType={data.wordType}
+                            meanings={data.meanings}
+                            className="my-4"
+                          />
+                        );
+                      } else {
+                        return (
+                          <div key={index} className="whitespace-pre-line">
+                            {part.content}
+                          </div>
+                        );
+                      }
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Style Panel */}
+          {/* Info Panel */}
           <div className="lg:col-span-1">
-
-
             {/* Note Info */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -285,6 +361,9 @@ export default function NoteEditPage() {
                 </div>
                 <div>
                   <strong>Characters:</strong> {content.length}
+                </div>
+                <div>
+                  <strong>Mode:</strong> {isEditing ? '✏️ Editing' : '👁️ Preview'}
                 </div>
               </div>
             </div>

@@ -13,6 +13,10 @@ interface AudioStore {
   // Background Music State
   backgroundMusicState: BackgroundMusicState;
 
+  // TTS Global State
+  isTTSPlaying: boolean;
+  currentTTSMessageId: number | null;
+
   // Audio Player Actions
   setAudioState: (state: Partial<AudioState>) => void;
   setCurrentAudioUrl: (url: string | null) => void;
@@ -29,6 +33,10 @@ interface AudioStore {
   setBackgroundMusicState: (state: Partial<BackgroundMusicState>) => void;
   toggleBackgroundMusic: () => void;
   setBackgroundVolume: (volume: number) => void;
+
+  // TTS Actions
+  setTTSPlaying: (playing: boolean, messageId?: number | null) => void;
+  resetTTS: () => void;
 }
 
 const defaultAudioState: AudioState = {
@@ -59,6 +67,8 @@ export const useAudioStore = create<AudioStore>((set) => ({
   currentMessageId: null,
   recorderState: defaultRecorderState,
   backgroundMusicState: defaultBackgroundMusicState,
+  isTTSPlaying: false,
+  currentTTSMessageId: null,
 
   // Audio Player Actions
   setAudioState: (state) =>
@@ -128,4 +138,17 @@ export const useAudioStore = create<AudioStore>((set) => ({
         volume: Math.max(0, Math.min(1, volume)),
       },
     })),
+
+  // TTS Actions
+  setTTSPlaying: (playing, messageId = null) =>
+    set({
+      isTTSPlaying: playing,
+      currentTTSMessageId: playing ? messageId : null,
+    }),
+
+  resetTTS: () =>
+    set({
+      isTTSPlaying: false,
+      currentTTSMessageId: null,
+    }),
 })); 

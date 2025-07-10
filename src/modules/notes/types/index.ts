@@ -1,7 +1,7 @@
 export interface NoteStyle {
-  backgroundColor: string; // e.g., 'bg-purple-100', 'bg-red-100', 'bg-blue-100'
-  textColor: string;       // e.g., 'text-purple-800', 'text-red-800', 'text-blue-800'
-  borderColor: string;     // e.g., 'border-purple-200', 'border-red-200', 'border-blue-200'
+  backgroundColor: string; // Always 'bg-white'
+  textColor: string;       // Always 'text-gray-800'
+  borderColor: string;     // Always 'border-gray-200'
 }
 
 // Proofreading data to track corrections made
@@ -26,6 +26,7 @@ export interface Note {
   style: NoteStyle;
   source?: 'proofreader' | 'manual'; // Track where the note came from
   proofreading?: ProofreadingData; // Store proofreading details if from proofreader
+  tags: string[]; // Tags for filtering (e.g., 'grammar', 'vocab', 'writing')
 }
 
 export interface NotesState {
@@ -34,36 +35,43 @@ export interface NotesState {
   error: string | null;
 }
 
-// Predefined note styles matching the design
-export const NOTE_STYLES: Record<string, NoteStyle> = {
-  purple: {
-    backgroundColor: 'bg-purple-100',
-    textColor: 'text-purple-800',
-    borderColor: 'border-purple-200'
-  },
-  orange: {
-    backgroundColor: 'bg-orange-100',
-    textColor: 'text-orange-800',
-    borderColor: 'border-orange-200'
-  },
-  blue: {
-    backgroundColor: 'bg-blue-100',
-    textColor: 'text-blue-800',
-    borderColor: 'border-blue-200'
-  },
-  green: {
-    backgroundColor: 'bg-green-100',
-    textColor: 'text-green-800',
-    borderColor: 'border-green-200'
-  },
-  pink: {
-    backgroundColor: 'bg-pink-100',
-    textColor: 'text-pink-800',
-    borderColor: 'border-pink-200'
-  },
-  yellow: {
-    backgroundColor: 'bg-yellow-100',
-    textColor: 'text-yellow-800',
-    borderColor: 'border-yellow-200'
-  }
+// Global notes panel state
+export interface GlobalNotesState {
+  isOpen: boolean;
+  selectedTags: string[];
+  searchQuery: string;
+}
+
+// Predefined tags for filtering
+export const NOTE_TAGS = {
+  GRAMMAR: 'grammar',
+  VOCABULARY: 'vocab',
+  WRITING: 'writing',
+  SPEAKING: 'speaking',
+  LISTENING: 'listening',
+  READING: 'reading',
+  PRONUNCIATION: 'pronunciation',
+  CONVERSATION: 'conversation',
+  GENERAL: 'general'
+} as const;
+
+export type NoteTag = typeof NOTE_TAGS[keyof typeof NOTE_TAGS];
+
+export const TAG_LABELS: Record<NoteTag, string> = {
+  [NOTE_TAGS.GRAMMAR]: '📝 Grammar',
+  [NOTE_TAGS.VOCABULARY]: '📚 Vocabulary',
+  [NOTE_TAGS.WRITING]: '✍️ Writing',
+  [NOTE_TAGS.SPEAKING]: '🗣️ Speaking',
+  [NOTE_TAGS.LISTENING]: '👂 Listening',
+  [NOTE_TAGS.READING]: '📖 Reading',
+  [NOTE_TAGS.PRONUNCIATION]: '🔊 Pronunciation',
+  [NOTE_TAGS.CONVERSATION]: '💬 Conversation',
+  [NOTE_TAGS.GENERAL]: '📌 General'
+};
+
+// Simplified note style - only white background
+export const NOTE_STYLES: NoteStyle = {
+  backgroundColor: 'bg-white',
+  textColor: 'text-gray-800',
+  borderColor: 'border-gray-200'
 }; 

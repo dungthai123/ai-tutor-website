@@ -23,4 +23,7 @@ export * from './tasks';
 export * from './ui';
 
 // Feedback Components
-export * from './feedback'; 
+export * from './feedback';
+
+// Speaking Helper Components
+export * from './speaking'; 

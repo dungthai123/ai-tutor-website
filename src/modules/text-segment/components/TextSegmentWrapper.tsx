@@ -23,6 +23,7 @@ export function TextSegmentWrapper({
     isVisible: false,
     position: { x: 0, y: 0 }
   });
+  const [highlightedWord, setHighlightedWord] = useState<string | null>(null);
 
   // Memoize Chinese text detection to prevent unnecessary recalculations
   const containsChinese = useMemo(() => {
@@ -54,6 +55,7 @@ export function TextSegmentWrapper({
         // Only generate pinyin if showPinyin is true and word contains Chinese
         let pinyinText: string | undefined = undefined;
         if (showPinyin && PinyinService.containsChinese(word)) {
+          // Use getPinyin to get the correct pronunciation for the whole word/phrase
           pinyinText = PinyinService.getPinyin(word);
         }
         
@@ -71,6 +73,7 @@ export function TextSegmentWrapper({
       const fallbackSegments: SegmentedText[] = Array.from(text).map(char => {
         let pinyinText: string | undefined = undefined;
         if (showPinyin && PinyinService.containsChinese(char)) {
+          // Use getPinyin for individual characters too to maintain consistency
           pinyinText = PinyinService.getPinyin(char);
         }
         
@@ -91,19 +94,28 @@ export function TextSegmentWrapper({
   }, [segmentText]);
 
   // Memoize the double-click handler
-  const handleWordDoubleClick = useCallback((word: string) => {
+  const handleWordDoubleClick = useCallback((word: string, event: React.MouseEvent<HTMLSpanElement>) => {
     if (!PinyinService.containsChinese(word)) return;
+
+    // Get the actual position of the clicked element
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = {
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    };
 
     setTooltipState({
       word,
       isVisible: true,
-      position: { x: window.innerWidth / 2, y: 100 } // Center position
+      position
     });
+    setHighlightedWord(word);
   }, []);
 
   // Memoize the close handler
   const handleCloseTooltip = useCallback(() => {
     setTooltipState(prev => ({ ...prev, isVisible: false }));
+    setHighlightedWord(null);
   }, []);
 
   // Memoize the segments rendering to prevent unnecessary re-renders
@@ -115,9 +127,10 @@ export function TextSegmentWrapper({
         showPinyin={showPinyin}
         onDoubleClick={handleWordDoubleClick}
         className="inline"
+        isHighlighted={highlightedWord === segment.word}
       />
     ));
-  }, [segments, showPinyin, handleWordDoubleClick]);
+  }, [segments, showPinyin, handleWordDoubleClick, highlightedWord]);
 
   if (isLoading) {
     return (

@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { ReadingQuestionProps } from './types';
 import { TextAndTranslate } from '../../shared/TextAndTranslate';
+import { TextSegmentWrapper } from '@/modules/text-segment';
 import { AspectRatioImage } from '../../shared/AspectRatioImage';
-import { DefaultReadingQuestion } from './DefaultReadingQuestion';
 import { HSKLevel } from '../../../types';
 
 interface StatementMatchingQuestionProps extends ReadingQuestionProps {
   hskLevel?: HSKLevel;
 }
 
-export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontClasses, hskLevel }: StatementMatchingQuestionProps) {
+export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontClasses, hskLevel, isTextSegmentEnabled }: StatementMatchingQuestionProps) {
   // Helper to check if passage is valid and not empty
   const hasValidPassage = quizModel.passage && quizModel.passage.trim() !== '' && quizModel.passage !== quizModel.question;
 
@@ -105,13 +105,21 @@ export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontCl
             // For HSK5, show passage as combined text with newlines preserved
             <div className="p-4 bg-white rounded border border-gray-200 shadow-sm">
               <h5 className="font-medium text-gray-700 mb-3">Reading Passage:</h5>
-              <TextAndTranslate 
-                text={quizModel.passage!} 
-                translation={quizModel.readingTranslationContext}
-                isShowTranslation={isShowTranslation}
-                fontClasses={fontClasses}
-                className="whitespace-pre-line"
-              />
+              {isTextSegmentEnabled ? (
+                <TextSegmentWrapper 
+                  text={quizModel.passage!}
+                  showPinyin={true}
+                  className="whitespace-pre-line"
+                />
+              ) : (
+                <TextAndTranslate 
+                  text={quizModel.passage!} 
+                  translation={quizModel.readingTranslationContext}
+                  isShowTranslation={isShowTranslation}
+                  fontClasses={fontClasses}
+                  className="whitespace-pre-line"
+                />
+              )}
             </div>
           ) : (
             // For other levels, show individual options with labels
@@ -122,13 +130,21 @@ export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontCl
                     <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-semibold">
                       {String.fromCharCode(65 + index)}
                     </span>
-                    <TextAndTranslate 
-                      text={option} 
-                      translation={quizModel.readingTranslationContext}
-                      isShowTranslation={isShowTranslation}
-                      fontClasses={fontClasses}
-                      className="flex-1"
-                    />
+                    {isTextSegmentEnabled ? (
+                      <TextSegmentWrapper 
+                        text={option}
+                        showPinyin={true}
+                        className="flex-1"
+                      />
+                    ) : (
+                      <TextAndTranslate 
+                        text={option} 
+                        translation={quizModel.readingTranslationContext}
+                        isShowTranslation={isShowTranslation}
+                        fontClasses={fontClasses}
+                        className="flex-1"
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -146,12 +162,20 @@ export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontCl
           style={{ '--slide-distance': '20px' } as React.CSSProperties}
         >
           <h4 className="font-semibold text-teal-800 mb-2">❓ Question:</h4>
-          <TextAndTranslate 
-            text={quizModel.question} 
-            translation={quizModel.readingTranslation}
-            isShowTranslation={isShowTranslation}
-            fontClasses={fontClasses}
-          />
+          {isTextSegmentEnabled ? (
+            <TextSegmentWrapper 
+              text={quizModel.question}
+              showPinyin={true}
+              className="mb-2"
+            />
+          ) : (
+            <TextAndTranslate 
+              text={quizModel.question} 
+              translation={quizModel.readingTranslation}
+              isShowTranslation={isShowTranslation}
+              fontClasses={fontClasses}
+            />
+          )}
         </div>
       )}
 
@@ -174,32 +198,4 @@ export function StatementMatchingQuestion({ quizModel, isShowTranslation, fontCl
       `}</style>
     </div>
   );
-}
-
-export function MissingWordQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function ShortPassageQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function LongPassageQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function StatementQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function PassageQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function MissingSentenceQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
-}
-
-export function MissingWordsQuestion(props: ReadingQuestionProps) {
-  return <DefaultReadingQuestion {...props} />;
 } 

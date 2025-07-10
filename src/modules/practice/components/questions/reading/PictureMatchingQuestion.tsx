@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { ReadingQuestionProps } from './types';
 import { TextAndTranslate } from '../../shared/TextAndTranslate';
+import { TextSegmentWrapper } from '@/modules/text-segment';
 import { ImageGrid } from '../../shared/ImageGrid';
 
-export function PictureMatchingQuestion({ quizModel, isShowTranslation }: ReadingQuestionProps) {
+export function PictureMatchingQuestion({ quizModel, isShowTranslation, isTextSegmentEnabled }: ReadingQuestionProps) {
   // Animation states for different content sections
   const [isQuestionAnimating, setIsQuestionAnimating] = useState(false);
   const [isImageListAnimating, setIsImageListAnimating] = useState(false);
@@ -80,11 +81,19 @@ export function PictureMatchingQuestion({ quizModel, isShowTranslation }: Readin
           style={{ '--slide-distance': '20px' } as React.CSSProperties}
         >
           <h4 className="font-semibold text-blue-800 mb-2">📝 Statement:</h4>
-          <TextAndTranslate 
-            text={quizModel.question} 
-            translation={quizModel.readingTranslation}
-            isShowTranslation={isShowTranslation}
-          />
+          {isTextSegmentEnabled ? (
+            <TextSegmentWrapper 
+              text={quizModel.question}
+              showPinyin={true}
+              className="mb-2"
+            />
+          ) : (
+            <TextAndTranslate 
+              text={quizModel.question} 
+              translation={quizModel.readingTranslation}
+              isShowTranslation={isShowTranslation}
+            />
+          )}
         </div>
       )}
 

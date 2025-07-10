@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useChat, useChatStore } from '../index';
+import { useChatStorage } from '../storage/use-chat-storage';
 import { useTextToSpeech } from '../audio/use-text-to-speech';
 import { useSettingsStore } from '../storage/settings-store';
 import { chatApiService } from '../../services';
@@ -28,8 +29,9 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
   const playedMessagesRef = useRef<Set<string>>(new Set());
   
   // Hooks
-  const { messages, isEndConversation } = useChatStore();
+  const { messages, isEndConversation, chatSessionId } = useChatStore();
   const { initializeConversation, resetConversation } = useChat();
+  const { saveConversation } = useChatStorage();
   const { playTTS } = useTextToSpeech();
   const { isAutoPlayTTS } = useSettingsStore();
   
@@ -198,15 +200,37 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
   }, [messages, isAutoPlayTTS, playTTS, isPageReady]);
   
   // Event handlers
-  const handleBack = useCallback(() => {
+  const handleBack = useCallback(async () => {
     if (messages.length > 0) {
       const confirmLeave = window.confirm(
         'Are you sure you want to leave this conversation? Your progress will be saved.'
       );
       if (!confirmLeave) return;
     }
+    
+    // Save conversation before leaving
+    if (messages.length > 0 && chatSessionId && topicDetail) {
+      await saveConversation(chatSessionId, messages, topicDetail);
+    }
+    
     router.push('/chatai');
-  }, [messages.length, router]);
+  }, [messages, chatSessionId, topicDetail, saveConversation, router]);
+
+  const handleEndConversation = useCallback(async () => {
+    if (messages.length > 0) {
+      const confirmEnd = window.confirm(
+        'Are you sure you want to end this conversation? Your progress will be saved.'
+      );
+      if (!confirmEnd) return;
+    }
+
+    // Save conversation
+    if (chatSessionId && topicDetail) {
+      await saveConversation(chatSessionId, messages, topicDetail);
+    }
+
+    router.push('/chatai');
+  }, [messages, chatSessionId, topicDetail, saveConversation, router]);
 
   const handleSettingsToggle = useCallback(() => {
     setShowSettings(!showSettings);
@@ -224,6 +248,7 @@ export function useChatPage({ conversationId }: UseChatPageProps) {
     
     // Handlers
     handleBack,
+    handleEndConversation,
     handleSettingsToggle,
     setShowSettings,
   };

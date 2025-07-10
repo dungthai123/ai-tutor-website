@@ -6,22 +6,23 @@ export interface SegmentedText {
   pinyin?: string;
 }
 
-export interface DictionaryEntry {
-  id?: string;
-  hanzi?: string;
-  word: string;
-  pinyin?: string;
-  pronunciation: string;
+export interface DictionaryMeaning {
   meaning: string;
-  definitions?: Array<{
-    partOfSpeech: string;
-    meaning: string;
-    examples?: string[];
+  explanation: string;
+  examples: Array<{
+    word: string;
+    phonetic: string;
+    translation: string;
   }>;
-  simplified?: string;
-  traditional?: string;
-  examples?: string[];
-  level?: string;
+}
+
+export interface DictionaryEntry {
+  hanzi: string;
+  pinyin: string;
+  han_nom: string;
+  word_level: string;
+  word_type: string;
+  meanings: DictionaryMeaning[];
 }
 
 // Component Props
@@ -35,8 +36,9 @@ export interface TextSegmentWrapperProps {
 export interface SegmentedWordProps {
   segment: SegmentedText;
   showPinyin: boolean;
-  onDoubleClick?: (word: string) => void;
+  onDoubleClick?: (word: string, event: React.MouseEvent<HTMLSpanElement>) => void;
   className?: string;
+  isHighlighted?: boolean;
 }
 
 export interface DictionaryTooltipProps {
@@ -58,7 +60,7 @@ export interface DictionaryApiResponse {
   success: boolean;
   code: number;
   message: string;
-  data: DictionaryEntry[];
+  data: DictionaryEntry;
 }
 
 export interface SegmentationResponse {

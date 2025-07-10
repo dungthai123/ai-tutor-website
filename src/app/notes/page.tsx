@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { NotesFilter, NotesGrid } from '@/modules/notes/components';
-import { useNotesPage } from '@/modules/notes/hooks';
+import { EnhancedNotesFilter, NotesGrid } from '@/modules/notes/components';
+import { useEnhancedNotesPage } from '@/modules/notes/hooks/useEnhancedNotesPage';
 import { MainLayout } from '@/shared/components/layout/MainLayout';
 
 export default function NotesPage() {
@@ -12,11 +12,14 @@ export default function NotesPage() {
     error,
     activePeriod,
     currentMonth,
+    selectedTags,
     handleNewNote,
     handleNoteClick,
     handlePeriodChange,
-    handleMonthChange
-  } = useNotesPage();
+    handleMonthChange,
+    handleTagToggle,
+    handleClearFilters
+  } = useEnhancedNotesPage();
 
   if (error) {
     return (
@@ -52,18 +55,21 @@ export default function NotesPage() {
 
         {/* Filter Controls */}
         <div className="mb-8">
-          <NotesFilter
+          <EnhancedNotesFilter
             activePeriod={activePeriod}
             onPeriodChange={handlePeriodChange}
             currentMonth={currentMonth}
             onMonthChange={handleMonthChange}
+            selectedTags={selectedTags}
+            onTagToggle={handleTagToggle}
+            onClearFilters={handleClearFilters}
           />
         </div>
 
         {/* Notes Grid */}
         <NotesGrid
           notes={notes}
-          onNoteClick={handleNoteClick}
+          onNoteClick={(note) => handleNoteClick(note.id)}
           onNewNoteClick={handleNewNote}
           loading={loading}
         />

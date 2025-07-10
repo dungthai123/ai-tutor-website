@@ -45,8 +45,8 @@ export default function TestIntroPage() {
   };
 
   const handleBack = () => {
-    const level = topic?.level || HSKLevel.HSK1;
-    router.push(`/practice/${testType}?level=${level}`);
+    // Navigate back to main practice page instead of type-specific page
+    router.push('/practice');
   };
 
   const getTimeLimit = (level: HSKLevel): number => {

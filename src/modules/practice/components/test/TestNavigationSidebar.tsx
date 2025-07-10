@@ -1,6 +1,6 @@
 import { Button } from '@/shared/components/ui/buttons/Button';
 import { QuestionNavigationGrid } from './QuestionNavigationGrid';
-import { PracticeTopicModel, HSKLevel } from '../../types';
+import { PracticeTopicModel, HSKLevel, QuizModel } from '../../types';
 import { TimerService } from '../../services/timer.service';
 
 function getTotalTimeForLevel(level: HSKLevel): number {
@@ -26,6 +26,11 @@ interface TestNavigationSidebarProps {
   timeElapsed: number;
   onExit: () => void;
   mode?: 'practice' | 'test';
+  
+  // Review mode props
+  isReviewMode?: boolean;
+  reviewSelectedAnswers?: Record<number, number | string>;
+  reviewQuestions?: QuizModel[];
 }
 
 export function TestNavigationSidebar({
@@ -39,7 +44,10 @@ export function TestNavigationSidebar({
   topic,
   timeElapsed,
   onExit,
-  mode = 'practice'
+  mode = 'practice',
+  isReviewMode = false,
+  reviewSelectedAnswers,
+  reviewQuestions
 }: TestNavigationSidebarProps) {
   const totalTime = topic ? getTotalTimeForLevel(topic.level) : 0;
   const timeRemaining = totalTime > 0 ? Math.max(totalTime - timeElapsed, 0) : 0;
@@ -110,6 +118,9 @@ export function TestNavigationSidebar({
         <QuestionNavigationGrid 
           onQuestionSelect={onQuestionChange}
           className="border-none p-0"
+          isReviewMode={isReviewMode}
+          reviewSelectedAnswers={reviewSelectedAnswers}
+          reviewQuestions={reviewQuestions}
         />
       </div>
 
@@ -145,7 +156,7 @@ export function TestNavigationSidebar({
           onClick={onExit}
           className="w-full py-3 font-medium bg-gray-800 text-white hover:bg-gray-700"
         >
-          Exit
+          {isReviewMode ? 'Back to History' : 'Exit Test'}
         </Button>
       </div>
     </div>

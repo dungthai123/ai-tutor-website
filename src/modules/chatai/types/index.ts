@@ -68,6 +68,8 @@ export interface AudioRecorderState {
   audioBlob?: Blob;
   audioUrl?: string;
   isProcessing?: boolean;
+  mimeType?: string;
+  fileExtension?: string;
 }
 
 export interface BackgroundMusicState {
@@ -253,3 +255,28 @@ export interface TranslationRequest {
 
 // Task related types
 export type { Task, TaskCategory, TaskStatus, TaskCheckRequest, TaskCheckResponse } from './tasks'; 
+
+// Speaking Helper Types
+export interface SpeakingHelperRequest {
+  topic: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  tone: 'Casual' | 'Formal' | 'Friendly' | 'Professional';
+  focus: 'Grammar' | 'Vocabulary' | 'Pronunciation' | 'Conversation Flow';
+}
+
+export interface SpeakingHelperResponse {
+  suggestions: {
+    phrases: string[];
+    vocabulary: Array<{
+      word: string;
+      pinyin: string;
+      meaning: string;
+      example: string;
+    }>;
+    grammarTips: string[];
+    conversationStarters: string[];
+  };
+  level: string;
+  tone: string;
+  focus: string;
+} 

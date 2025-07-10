@@ -63,6 +63,9 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
       const timeStarted = Date.now();
       const sessionId = `${testType}-${testId}`;
 
+      // Stop any existing timer for this session before starting a new one
+      TimerService.stopTimer(sessionId);
+
       setState(prev => ({
         ...prev,
         topic,
@@ -215,6 +218,15 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
     initializeTest();
   }, [testId, testType, initializeTest]);
 
+  // Cleanup function for when exiting test
+  const cleanupTest = useCallback(() => {
+    const sessionId = `${testType}-${testId}`;
+    TimerService.stopTimer(sessionId);
+    
+    // Reset history saved flag
+    historySavedRef.current = false;
+  }, [testType, testId]);
+
   // Computed values
   const computed = useMemo(() => {
     const currentQuestion = state.questions[state.currentPosition] || null;
@@ -241,10 +253,9 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
     
     // Cleanup timer on unmount
     return () => {
-      const sessionId = `${testType}-${testId}`;
-      TimerService.stopTimer(sessionId);
+      cleanupTest();
     };
-  }, [initializeTest, testType, testId]);
+  }, [initializeTest, cleanupTest]);
 
   return {
     state,
@@ -254,7 +265,8 @@ export function useTestSession(testType: PracticeType, testId: string): UseTestS
       previousQuestion,
       goToQuestion,
       completeTest,
-      resetTest
+      resetTest,
+      cleanupTest
     },
     computed
   };

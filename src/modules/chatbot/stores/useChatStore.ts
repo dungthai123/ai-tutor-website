@@ -42,7 +42,10 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   setLoading: (loading) => set({ isLoading: loading }),
 
-  setError: (error) => set({ error, isLoading: false }),
+  setError: (error) => set((state) => ({ 
+    error, 
+    isLoading: error ? false : state.isLoading  // Only set loading to false if there's an actual error
+  })),
 
   clearMessages: () => set({ messages: [], error: null }),
 })); 

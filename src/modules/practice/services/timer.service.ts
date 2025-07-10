@@ -21,6 +21,7 @@ export class TimerService {
     }, interval);
 
     this.timers.set(sessionId, timer);
+    console.log(`Timer started for session: ${sessionId}`);
   }
 
   /**
@@ -31,6 +32,7 @@ export class TimerService {
     if (timer) {
       clearInterval(timer);
       this.timers.delete(sessionId);
+      console.log(`Timer stopped for session: ${sessionId}`);
     }
   }
 
@@ -38,9 +40,24 @@ export class TimerService {
    * Stop all timers (cleanup)
    */
   static stopAllTimers(): void {
+    console.log(`Stopping all timers. Active timers: ${this.timers.size}`);
     for (const [sessionId] of this.timers) {
       this.stopTimer(sessionId);
     }
+  }
+
+  /**
+   * Get active timer count (for debugging)
+   */
+  static getActiveTimerCount(): number {
+    return this.timers.size;
+  }
+
+  /**
+   * Get all active session IDs (for debugging)
+   */
+  static getActiveSessionIds(): string[] {
+    return Array.from(this.timers.keys());
   }
 
   /**

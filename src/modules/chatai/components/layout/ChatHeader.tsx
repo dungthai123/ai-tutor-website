@@ -1,42 +1,59 @@
 import React from 'react';
-import { ArrowLeft, Settings, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Settings, Volume2, VolumeX, LogOut } from 'lucide-react';
 import { useSettingsStore, useBackgroundMusic } from '@/modules/chatai/hooks';
 import { TopicDetail } from '@/modules/chatai/types';
 import { cn } from '@/modules/chatai/utils';
+import { Button } from '@/shared/components/ui/buttons/Button';
 
 interface ChatHeaderProps {
   topicDetail: TopicDetail | null;
   onBack: () => void;
-  onSettingsToggle: () => void;
+  onEndConversation: () => void;
+  imageBackground?: string;
   showSettings: boolean;
+  onSettingsToggle: () => void;
 }
 
 export function ChatHeader({ 
   topicDetail, 
   onBack, 
-  onSettingsToggle, 
-  showSettings 
+  onEndConversation, 
+  imageBackground, 
+  showSettings, 
+  onSettingsToggle 
 }: ChatHeaderProps) {
   const { isMusicBackgroundTurnOn, setMusicBackgroundTurnOn } = useSettingsStore();
   const { isPlaying, toggleBackgroundMusic } = useBackgroundMusic();
 
   return (
-    <div className="relative h-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 z-10">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">
-              {topicDetail?.title || 'Chat AI'}
-            </h1>
-          </div>
-        </div>
+    <header
+      className={cn(
+        'fixed top-0 left-0 right-0 z-40 px-4 py-3 transition-all',
+        'bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md shadow-sm'
+      )}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Left Side - Back Button */}
+        <Button
+          variant="secondary"
+          onClick={onBack}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft size={24} />
+        </Button>
 
+        {/* Center - Topic Image */}
+        {imageBackground && (
+          <div className="flex-1 flex justify-center">
+            <img
+              src={imageBackground}
+              alt="Topic background"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
+        )}
+
+        {/* Right Side - Controls */}
         <div className="flex items-center gap-2">
           {/* Background Music Toggle */}
           <button
@@ -59,19 +76,24 @@ export function ChatHeader({
           </button>
 
           {/* Settings Toggle */}
-          <button
+          <Button
+            variant="secondary"
             onClick={onSettingsToggle}
-            className={cn(
-              'p-2 rounded-full transition-colors',
-              showSettings
-                ? 'bg-gray-100 text-gray-900'
-                : 'hover:bg-gray-100 text-gray-600'
-            )}
+            className="text-gray-600 hover:text-gray-900"
           >
-            <Settings className="h-5 w-5" />
-          </button>
+            <Settings size={20} />
+          </Button>
+
+          {/* End Conversation */}
+          <Button
+            variant="secondary"
+            onClick={onEndConversation}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <LogOut size={20} />
+          </Button>
         </div>
       </div>
-    </div>
+    </header>
   );
 } 

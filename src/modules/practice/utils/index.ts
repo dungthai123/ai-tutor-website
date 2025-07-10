@@ -61,4 +61,40 @@ export const getDynamicFontClasses = (fontSize: FontSize, baseClasses: string = 
     transcriptText: `${baseClasses} ${sizeClasses.transcriptText}`,
     passageText: `${baseClasses} ${sizeClasses.passageText}`,
   };
-}; 
+};
+
+/**
+ * Shared slide animation styles for reading questions
+ */
+export const slideAnimationStyles = `
+  @keyframes slide-in-right {
+    0% {
+      transform: translateX(var(--slide-distance));
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.1s ease-out;
+  }
+`;
+
+/**
+ * Get animation classes for content sections
+ */
+export const getAnimationClasses = (isAnimating: boolean) => {
+  return `transition-transform duration-100 ease-out ${
+    isAnimating ? 'animate-slide-in-right' : ''
+  }`;
+};
+
+/**
+ * Get animation styles object
+ */
+export const getAnimationStyles = () => ({
+  '--slide-distance': '20px'
+} as React.CSSProperties); 

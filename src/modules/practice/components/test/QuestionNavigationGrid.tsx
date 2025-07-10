@@ -1,12 +1,17 @@
 'use client';
 
 import { useTestNavigationStore } from '@/lib/stores/testNavigationStore';
+import { usePracticeDetailStore } from '@/lib/stores/practiceDetailStore';
 import { cn } from '@/utils/helpers';
 import { QuizModel } from '../../types';
 
 interface QuestionNavigationGridProps {
   onQuestionSelect?: (questionIndex: number) => void;
   className?: string;
+  // Review mode props
+  isReviewMode?: boolean;
+  reviewSelectedAnswers?: Record<number, number | string>;
+  reviewQuestions?: QuizModel[];
 }
 
 interface QuestionGroup {
@@ -17,18 +22,32 @@ interface QuestionGroup {
 
 export function QuestionNavigationGrid({ 
   onQuestionSelect, 
-  className 
+  className,
+  isReviewMode = false,
+  reviewSelectedAnswers,
+  reviewQuestions
 }: QuestionNavigationGridProps) {
   const {
-    questions,
+    questions: storeQuestions,
     setCurrentQuestion,
     markQuestionAsReviewed,
     getQuestionStatus,
+    selectedAnswers: storeSelectedAnswers,
   } = useTestNavigationStore();
 
+  const { showAnswerAfterEach } = usePracticeDetailStore();
+
+  // Use review data when in review mode, otherwise use store data
+  const questions = isReviewMode && reviewQuestions ? reviewQuestions : storeQuestions;
+  const selectedAnswers = isReviewMode && reviewSelectedAnswers ? reviewSelectedAnswers : storeSelectedAnswers;
+  const shouldShowAnswers = isReviewMode || showAnswerAfterEach;
+
   const handleQuestionClick = (index: number) => {
-    setCurrentQuestion(index);
-    markQuestionAsReviewed(index);
+    // Only update store in non-review mode
+    if (!isReviewMode) {
+      setCurrentQuestion(index);
+      markQuestionAsReviewed(index);
+    }
     onQuestionSelect?.(index);
   };
 
@@ -39,11 +58,55 @@ export function QuestionNavigationGrid({
       return 'bg-green-600 text-white shadow-md';
     }
     
-    if (status.isAnswered) {
+    // Check if question is answered (either from store or review data)
+    const isAnswered = isReviewMode ? selectedAnswers[index] !== undefined : status.isAnswered;
+    
+    if (isAnswered) {
+      // If show answer is enabled and question is answered, show correct/incorrect colors
+      if (shouldShowAnswers && selectedAnswers[index] !== undefined) {
+        const question = questions[index];
+        const selectedAnswer = selectedAnswers[index];
+        const correctAnswer = parseInt(question.correctAnswer) - 1;
+        
+        // Handle both number and string answers
+        const selectedAnswerNum = typeof selectedAnswer === 'string' ? parseInt(selectedAnswer) : selectedAnswer;
+        const isCorrect = selectedAnswerNum === correctAnswer;
+        
+        return isCorrect 
+          ? 'bg-green-500 text-white shadow-md' 
+          : 'bg-red-500 text-white shadow-md';
+      }
+      
+      // Default answered state (blue)
       return 'bg-blue-600 text-white';
     }
     
     return 'bg-blue-200 text-blue-600';
+  };
+
+  const getTooltipText = (index: number) => {
+    const status = getQuestionStatus(index);
+    const question = questions[index];
+    
+    // Check if question is answered (either from store or review data)
+    const isAnswered = isReviewMode ? selectedAnswers[index] !== undefined : status.isAnswered;
+    
+    if (!isAnswered) {
+      return `Question ${question.id} - Unanswered`;
+    }
+    
+    if (shouldShowAnswers && selectedAnswers[index] !== undefined) {
+      const selectedAnswer = selectedAnswers[index];
+      const correctAnswer = parseInt(question.correctAnswer) - 1;
+      
+      // Handle both number and string answers
+      const selectedAnswerNum = typeof selectedAnswer === 'string' ? parseInt(selectedAnswer) : selectedAnswer;
+      const isCorrect = selectedAnswerNum === correctAnswer;
+      
+      return `Question ${question.id} - ${isCorrect ? 'Correct' : 'Incorrect'}`;
+    }
+    
+    return `Question ${question.id} - Answered`;
   };
 
   const getSectionTitle = (questionType: string, sectionIndex: number): string => {
@@ -111,7 +174,7 @@ export function QuestionNavigationGrid({
                     'hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
                     getQuestionButtonStyle(globalIndex)
                   )}
-                  title={`Question ${questionId} - ${getQuestionStatus(globalIndex).isAnswered ? 'Answered' : 'Unanswered'}`}
+                  title={getTooltipText(globalIndex)}
                 >
                   {questionId}
                 </button>

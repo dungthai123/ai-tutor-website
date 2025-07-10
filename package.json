@@ -22,6 +22,7 @@
     "@tiptap/pm": "^2.24.2",
     "@tiptap/react": "^2.24.2",
     "@tiptap/starter-kit": "^2.24.2",
+    "@types/nprogress": "^0.2.3",
     "@types/three": "^0.177.0",
     "@types/uuid": "^10.0.0",
     "axios": "^1.10.0",
@@ -38,6 +39,7 @@
     "next": "15.3.4",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
+    "nprogress": "^0.2.0",
     "openai": "^5.8.2",
     "pinyin": "^4.0.0",
     "react": "^19.0.0",
@@ -53,6 +55,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.3.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

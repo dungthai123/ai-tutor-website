@@ -33,9 +33,9 @@ export function useNotes() {
   }, []);
 
   // Create a new note
-  const createNote = useCallback((content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData) => {
+  const createNote = useCallback((content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData, tags?: string[]) => {
     try {
-      const newNote = NotesService.createNote(content, title, style, proofreading);
+      const newNote = NotesService.createNote(content, title, style, proofreading, tags);
       setState(prev => ({
         ...prev,
         notes: [newNote, ...prev.notes],

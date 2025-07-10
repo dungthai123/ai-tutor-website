@@ -58,34 +58,28 @@ export const chatUtils = {
   },
 
   // Transform API response to JiebaCollection format
-  transformApiResponseToJiebaCollection: (apiData: { original: string; segments: (string | JiebaSegment)[] }): JiebaCollection => {
-    // Handle case where segments is an array of strings (from API)
-    if (Array.isArray(apiData.segments) && apiData.segments.length > 0) {
-      const segments = apiData.segments.map((segment: string | JiebaSegment) => {
-        if (typeof segment === 'string') {
-          // Convert string to JiebaSegment
-          return {
-            word: segment,
-            pinyin: undefined,
-            translation: undefined,
-            explanation: undefined,
-          };
-        } else {
-          // Already a JiebaSegment object
-          return segment;
-        }
-      });
-
-      return {
-        original: apiData.original,
-        segments,
-      };
-    }
-
-    // Fallback: create segments from original text if no segments provided
+  transformApiResponseToJiebaCollection: (apiData: unknown): JiebaCollection => {
+    // Safely access properties with type guards
+    const data = apiData as { original?: string; segments?: (string | JiebaSegment)[]; task_completion_status?: unknown };
+    const original = data.original || '';
+    const segments = data.segments || [];
+    
+    // If segments are strings, convert to JiebaSegment
+    const processedSegments = segments.map((segment: string | JiebaSegment) => {
+      if (typeof segment === 'string') {
+        return {
+          word: segment,
+          pinyin: undefined,
+          translation: undefined,
+          explanation: undefined,
+        };
+      }
+      return segment;
+    });
+    
     return {
-      original: apiData.original,
-      segments: [],
+      original,
+      segments: processedSegments,
     };
   },
 };

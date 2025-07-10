@@ -262,9 +262,24 @@ export class PracticeService {
       // Handle writing questions
       if (question.type === PracticeType.WRITING) {
         if (typeof selectedAnswer === 'string') {
-          // For ordering questions, we can do a direct comparison
-          if (question.questionType === 'Write_Ordering') {
-            if (selectedAnswer.trim() === question.correctAnswer.trim()) {
+          // For questions that can be scored automatically with string comparison
+          if (question.questionType === 'Write_Ordering' || question.questionType === 'Write_Hanzi') {
+            // For Chinese characters (Hanzi), do exact comparison without case conversion
+            // For word ordering, normalize by trimming and case-insensitive comparison
+            let isCorrectAnswer = false;
+            
+            if (question.questionType === 'Write_Hanzi') {
+              // Exact comparison for Chinese characters (case sensitive, only trim whitespace)
+              isCorrectAnswer = selectedAnswer.trim() === question.correctAnswer.trim();
+            } else {
+              // For word ordering, remove all spaces and do case-insensitive comparison
+              // User answer has spaces between words, but correct answer has no spaces
+              const normalizedUserAnswer = selectedAnswer.replace(/\s+/g, '').toLowerCase();
+              const normalizedCorrectAnswer = question.correctAnswer.replace(/\s+/g, '').toLowerCase();
+              isCorrectAnswer = normalizedUserAnswer === normalizedCorrectAnswer;
+            }
+            
+            if (isCorrectAnswer) {
               correct++;
             } else {
               wrong++;

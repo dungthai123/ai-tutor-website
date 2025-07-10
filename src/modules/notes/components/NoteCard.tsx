@@ -46,10 +46,8 @@ export function NoteCard({ note, onClick, className }: NoteCardProps) {
     <div 
       className={cn(
         'group relative rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200',
-        'border border-opacity-50 cursor-pointer transform hover:scale-[1.02]',
-        note.style.backgroundColor,
-        note.style.textColor,
-        note.style.borderColor,
+        'border border-gray-200 cursor-pointer transform hover:scale-[1.02]',
+        'bg-white text-gray-800',
         className
       )}
       onClick={onClick}

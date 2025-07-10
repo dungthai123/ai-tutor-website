@@ -29,4 +29,7 @@ export * from './history';
 export { useTasks } from './useTasks';
 
 // Speech-to-Text Tracking
-export { useSpeechToTextTracker } from './useSpeechToTextTracker'; 
+export { useSpeechToTextTracker } from './useSpeechToTextTracker';
+
+// Speaking Helper Hooks
+export * from './speaking'; 

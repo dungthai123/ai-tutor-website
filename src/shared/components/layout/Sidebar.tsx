@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { Link } from '../ui/NavigationLoader'; // Adjusted import path
 import { usePathname } from 'next/navigation';
 import { useSidebarState } from '../../hooks/useSidebarState';
 
@@ -13,48 +13,49 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  {
-    id: 'voice-practice',
-    label: 'Practice với AI',
-    href: '/aitutor',
-    icon: '🎯'
-  },
+  // {
+  //   id: 'voice-practice',
+  //   label: 'Practice với AI',
+  //   href: '/aitutor',
+  //   icon: '🎯'
+  // },
   {
     id: 'chat-ai',
-    label: 'Chat AI',
+    label: 'AI Tutor',
     href: '/chatai',
     icon: '🤖'
   },
   {
     id: 'chat-ai-history',
-    label: 'Chat AI History',
+    label: 'Lịch sử chat',
     href: '/chatai/history',
     icon: '💬'
   },
   {
     id: 'hsk-practice',
-    label: 'HSK Practice',
+    label: 'Giải đề HSK',
     href: '/practice',
     icon: '📚'
   },
+    {
+    id: 'test-history',
+    label: 'Lịch sử làm bài',
+    href: '/history',
+    icon: '🕑'
+  },
   {
     id: 'proofreading',
-    label: 'Proofreading',
+    label: 'Luyện viết',
     href: '/proofreading',
     icon: '✍️'
   },
   {
     id: 'my-notes',
-    label: 'My Notes',
+    label: 'Ghi chú',
     href: '/notes',
     icon: '📔'
   },
-  {
-    id: 'test-history',
-    label: 'Test History',
-    href: '/history',
-    icon: '🕑'
-  }
+
 ];
 
 export const Sidebar: React.FC = () => {

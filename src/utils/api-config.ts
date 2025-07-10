@@ -35,7 +35,7 @@ export const getDefaultLanguage = (): string => {
       case 'zh':
         return API_CONFIG.HEADER_VALUES.LOCALE_ZH_CN;
       default:
-        return API_CONFIG.HEADER_VALUES.LOCALE_EN;
+        return API_CONFIG.HEADER_VALUES.LOCALE_VI;
     }
   }
   return API_CONFIG.HEADER_VALUES.LOCALE_EN;

@@ -43,19 +43,18 @@ export function AnswerSection({
       {['Sai', 'Đúng'].map((option, index) => {
         const isSelected = selectedAnswer === index;
         const isCorrect = index === correctAnswerIndex;
-        const showCorrectness = showFeedback;
         
         return (
           <button
             key={index}
             onClick={() => onAnswerSelected(index)}
             className={`p-4 rounded-xl text-center font-semibold text-lg transition-all ${
-              isSelected && !showCorrectness
-                ? 'bg-blue-600 text-white shadow-md'
-                : showCorrectness && isCorrect
+              isSelected && showFeedback && isCorrect
                 ? 'bg-green-500 text-white shadow-md'
-                : showCorrectness && isSelected && !isCorrect
+                : isSelected && showFeedback && !isCorrect
                 ? 'bg-red-500 text-white shadow-md'
+                : isSelected && !showFeedback
+                ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
             }`}
           >
@@ -78,19 +77,18 @@ export function AnswerSection({
         {quizModel.optionList?.map((option, index) => {
           const isSelected = selectedAnswer === index;
           const isCorrect = index === correctAnswerIndex;
-          const showCorrectness = showFeedback;
           
           return (
             <button
               key={option.id}
               onClick={() => onAnswerSelected(index)}
               className={`p-4 rounded-xl transition-all ${
-                isSelected && !showCorrectness
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : showCorrectness && isCorrect
+                isSelected && showFeedback && isCorrect
                   ? 'bg-green-500 text-white shadow-md'
-                  : showCorrectness && isSelected && !isCorrect
+                  : isSelected && showFeedback && !isCorrect
                   ? 'bg-red-500 text-white shadow-md'
+                  : isSelected && !showFeedback
+                  ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
               }`}
             >
@@ -123,30 +121,22 @@ export function AnswerSection({
       {quizModel.optionList?.map((option, index) => {
         const isSelected = selectedAnswer === index;
         const isCorrect = index === correctAnswerIndex;
-        const showCorrectness = showFeedback;
         
         return (
           <button
             key={option.id}
             onClick={() => onAnswerSelected(index)}
             className={`p-4 rounded-xl text-center transition-all ${
-              isSelected && !showCorrectness
-                ? 'bg-blue-600 text-white shadow-md'
-                : showCorrectness && isCorrect
+              isSelected && showFeedback && isCorrect
                 ? 'bg-green-500 text-white shadow-md'
-                : showCorrectness && isSelected && !isCorrect
+                : isSelected && showFeedback && !isCorrect
                 ? 'bg-red-500 text-white shadow-md'
+                : isSelected && !showFeedback
+                ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
             }`}
           >
             <div className="flex flex-col items-center gap-2">
-              {/* {option.imageUrl && (
-                <img
-                  src={option.imageUrl}
-                  alt={`Option ${index + 1}`}
-                  className="w-12 h-12 object-cover rounded-lg"
-                />
-              )} */}
               <span className={` ${fontClasses.answerText}`}>
                {option.text}
               </span>
@@ -162,19 +152,18 @@ export function AnswerSection({
       {quizModel.optionList?.map((option, index) => {
         const isSelected = selectedAnswer === index;
         const isCorrect = index === correctAnswerIndex;
-        const showCorrectness = showFeedback;
         
         return (
           <button
             key={option.id}
             onClick={() => onAnswerSelected(index)}
             className={`p-4 rounded-xl text-left transition-all ${
-              isSelected && !showCorrectness
-                ? 'bg-blue-600 text-white shadow-md'
-                : showCorrectness && isCorrect
+              isSelected && showFeedback && isCorrect
                 ? 'bg-green-500 text-white shadow-md'
-                : showCorrectness && isSelected && !isCorrect
+                : isSelected && showFeedback && !isCorrect
                 ? 'bg-red-500 text-white shadow-md'
+                : isSelected && !showFeedback
+                ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
             }`}
           >

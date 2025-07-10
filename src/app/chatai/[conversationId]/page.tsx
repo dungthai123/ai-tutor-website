@@ -4,6 +4,7 @@ import React from 'react';
 import { 
   ChatHeader,
   ChatBackground,
+  RightSidebar,
 } from '@/modules/chatai/components/layout';
 import { 
   ChatMessages,
@@ -19,9 +20,7 @@ import {
 import { 
   NewChatInput
 } from '@/modules/chatai/components/input';
-import {
-  TaskChecklistPanel
-} from '@/modules/chatai/components/tasks';
+// TaskChecklistPanel is now included in RightSidebar
 import { useChatPage, useTasks } from '@/modules/chatai/hooks';
 import { SpeechToTextProvider, useSpeechToTextContext } from '@/modules/chatai/contexts/SpeechToTextContext';
 
@@ -39,6 +38,7 @@ function ChatPageContent({ conversationId }: { conversationId: string }) {
     messages,
     imageBackground,
     handleBack,
+    handleEndConversation,
     handleSettingsToggle,
     setShowSettings,
   } = useChatPage({ conversationId });
@@ -72,7 +72,7 @@ function ChatPageContent({ conversationId }: { conversationId: string }) {
         console.log('⏭️ Skipping task check for text input message:', messageContent);
       }
     }
-  }, [messages, topicDetail, isSpeechToTextMessage]);
+  }, [messages, topicDetail, isSpeechToTextMessage, checkTaskCompletion]);
 
   // Loading state
   if (loading) {
@@ -95,8 +95,10 @@ function ChatPageContent({ conversationId }: { conversationId: string }) {
         <ChatHeader
           topicDetail={topicDetail}
           onBack={handleBack}
-          onSettingsToggle={handleSettingsToggle}
+          onEndConversation={handleEndConversation}
+          imageBackground={imageBackground ?? undefined}
           showSettings={showSettings}
+          onSettingsToggle={handleSettingsToggle}
         />
 
         {/* Messages Container - Flex-1 to take remaining space */}
@@ -118,10 +120,11 @@ function ChatPageContent({ conversationId }: { conversationId: string }) {
         />
       </div>
 
-      {/* Task Checklist Panel*/}
-      <TaskChecklistPanel 
+      {/* Right Sidebar with Task Checklist and Speaking Helper */}
+      <RightSidebar 
         taskCategories={taskCategories}
         isCheckingTasks={isCheckingTasks}
+        topicDetail={topicDetail}
       />
     </div>
   );

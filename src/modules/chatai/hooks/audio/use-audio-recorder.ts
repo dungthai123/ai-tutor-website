@@ -1,5 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useAudioStore } from '../storage/audio-store';
+import { useTextToSpeech } from './use-text-to-speech';
 
 export const useAudioRecorder = () => {
   const {
@@ -10,13 +11,21 @@ export const useAudioRecorder = () => {
     resetRecorder,
   } = useAudioStore();
 
+  const { stopTTS } = useTextToSpeech();
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const mimeTypeRef = useRef<string>('');
+  const fileExtensionRef = useRef<string>('');
 
   const startRecording = useCallback(async () => {
     try {
+      // Stop any playing TTS audio before starting recording
+      console.log('🔇 Stopping TTS audio before recording...');
+      await stopTTS();
+
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -30,12 +39,34 @@ export const useAudioRecorder = () => {
       streamRef.current = stream;
       chunksRef.current = [];
 
-      // Choose the best available audio format
-      const mimeType = MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')
-        ? 'audio/mp4;codecs=mp4a.40.2'
-        : MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm';
+      // Choose the best available audio format supported by OpenAI Whisper
+      // Priority: webm (opus) > mp4 > wav
+      let mimeType: string;
+      let fileExtension: string;
+
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+        fileExtension = 'webm';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+        fileExtension = 'm4a';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+        fileExtension = 'webm';
+      } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav';
+        fileExtension = 'wav';
+      } else {
+        // Fallback to default
+        mimeType = 'audio/webm';
+        fileExtension = 'webm';
+      }
+
+      // Store the format info for later use
+      mimeTypeRef.current = mimeType;
+      fileExtensionRef.current = fileExtension;
+
+      console.log('🎤 Using audio format:', { mimeType, fileExtension });
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
@@ -54,16 +85,22 @@ export const useAudioRecorder = () => {
       // Handle recording stop
       mediaRecorder.onstop = () => {
         console.log('🎬 MediaRecorder stopped, processing audio...');
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        const audioBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
         const audioUrl = URL.createObjectURL(audioBlob);
 
-        console.log('📦 Audio blob created:', { size: audioBlob.size, type: audioBlob.type });
+        console.log('📦 Audio blob created:', { 
+          size: audioBlob.size, 
+          type: audioBlob.type,
+          extension: fileExtensionRef.current 
+        });
 
         setRecorderState({
           audioBlob,
           audioUrl,
           isRecording: false,
           isProcessing: false,
+          mimeType: mimeTypeRef.current,
+          fileExtension: fileExtensionRef.current,
         });
 
         // Clean up stream
@@ -103,7 +140,7 @@ export const useAudioRecorder = () => {
       });
       throw error;
     }
-  }, [setRecorderState, startRecordingStore]);
+  }, [setRecorderState, startRecordingStore, stopTTS]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && recorderState.isRecording) {
@@ -125,11 +162,14 @@ export const useAudioRecorder = () => {
 
     resetRecorder();
     chunksRef.current = [];
+    mimeTypeRef.current = '';
+    fileExtensionRef.current = '';
   }, [recorderState.audioUrl, resetRecorder]);
 
   const getUniqueFileName = useCallback(() => {
     const timestamp = Date.now();
-    return `recording_${timestamp}.m4a`;
+    const extension = fileExtensionRef.current || 'webm';
+    return `recording_${timestamp}.${extension}`;
   }, []);
 
   // Cleanup on unmount

@@ -49,6 +49,14 @@ export function ListeningQuestionContent({
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const eventListenersRef = useRef<{
+    onLoadedMetadata?: () => void;
+    onTimeUpdate?: () => void;
+    onPlay?: () => void;
+    onPause?: () => void;
+    onEnded?: () => void;
+    onError?: () => void;
+  }>({});
   
   const {
     isShowTranslation,
@@ -88,11 +96,36 @@ export function ListeningQuestionContent({
 
   // Initialize audio element
   useEffect(() => {
-    if (audioUrl && !audioRef.current) {
+    if (audioUrl) {
+      // Clean up any existing audio instance
+      if (audioRef.current && eventListenersRef.current) {
+        audioRef.current.pause();
+        if (eventListenersRef.current.onLoadedMetadata) {
+          audioRef.current.removeEventListener('loadedmetadata', eventListenersRef.current.onLoadedMetadata);
+        }
+        if (eventListenersRef.current.onTimeUpdate) {
+          audioRef.current.removeEventListener('timeupdate', eventListenersRef.current.onTimeUpdate);
+        }
+        if (eventListenersRef.current.onPlay) {
+          audioRef.current.removeEventListener('play', eventListenersRef.current.onPlay);
+        }
+        if (eventListenersRef.current.onPause) {
+          audioRef.current.removeEventListener('pause', eventListenersRef.current.onPause);
+        }
+        if (eventListenersRef.current.onEnded) {
+          audioRef.current.removeEventListener('ended', eventListenersRef.current.onEnded);
+        }
+        if (eventListenersRef.current.onError) {
+          audioRef.current.removeEventListener('error', eventListenersRef.current.onError);
+        }
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+      
       const audio = new Audio(audioUrl);
       audio.preload = 'metadata';
       
-      audio.onloadedmetadata = () => {
+      const onLoadedMetadata = () => {
         setDuration(audio.duration);
         // Auto-play when audio metadata is loaded
         audio.play().catch((error) => {
@@ -101,30 +134,71 @@ export function ListeningQuestionContent({
         });
       };
       
-      audio.ontimeupdate = () => {
+      const onTimeUpdate = () => {
         setCurrentTime(audio.currentTime);
       };
       
-      audio.onplay = () => setIsPlaying(true);
-      audio.onpause = () => setIsPlaying(false);
-      audio.onended = () => {
+      const onPlay = () => setIsPlaying(true);
+      const onPause = () => setIsPlaying(false);
+      const onEnded = () => {
         setIsPlaying(false);
         setCurrentTime(0);
       };
       
-      audio.onerror = () => {
+      const onError = () => {
         console.error('Audio failed to load:', audioUrl);
         setIsPlaying(false);
       };
+      
+      // Store event listener references
+      eventListenersRef.current = {
+        onLoadedMetadata,
+        onTimeUpdate,
+        onPlay,
+        onPause,
+        onEnded,
+        onError
+      };
+      
+      audio.addEventListener('loadedmetadata', onLoadedMetadata);
+      audio.addEventListener('timeupdate', onTimeUpdate);
+      audio.addEventListener('play', onPlay);
+      audio.addEventListener('pause', onPause);
+      audio.addEventListener('ended', onEnded);
+      audio.addEventListener('error', onError);
       
       audioRef.current = audio;
     }
 
     return () => {
-      if (audioRef.current) {
+      if (audioRef.current && eventListenersRef.current) {
         audioRef.current.pause();
+        if (eventListenersRef.current.onLoadedMetadata) {
+          audioRef.current.removeEventListener('loadedmetadata', eventListenersRef.current.onLoadedMetadata);
+        }
+        if (eventListenersRef.current.onTimeUpdate) {
+          audioRef.current.removeEventListener('timeupdate', eventListenersRef.current.onTimeUpdate);
+        }
+        if (eventListenersRef.current.onPlay) {
+          audioRef.current.removeEventListener('play', eventListenersRef.current.onPlay);
+        }
+        if (eventListenersRef.current.onPause) {
+          audioRef.current.removeEventListener('pause', eventListenersRef.current.onPause);
+        }
+        if (eventListenersRef.current.onEnded) {
+          audioRef.current.removeEventListener('ended', eventListenersRef.current.onEnded);
+        }
+        if (eventListenersRef.current.onError) {
+          audioRef.current.removeEventListener('error', eventListenersRef.current.onError);
+        }
+        audioRef.current.src = '';
         audioRef.current = null;
       }
+      // Reset state when component unmounts
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+      setPlaybackRate(1);
     };
   }, [audioUrl]);
 
@@ -139,6 +213,35 @@ export function ListeningQuestionContent({
       });
     }
   }, [questionIndex, audioUrl]);
+
+  // Global cleanup effect to ensure audio stops when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current && eventListenersRef.current) {
+        audioRef.current.pause();
+        if (eventListenersRef.current.onLoadedMetadata) {
+          audioRef.current.removeEventListener('loadedmetadata', eventListenersRef.current.onLoadedMetadata);
+        }
+        if (eventListenersRef.current.onTimeUpdate) {
+          audioRef.current.removeEventListener('timeupdate', eventListenersRef.current.onTimeUpdate);
+        }
+        if (eventListenersRef.current.onPlay) {
+          audioRef.current.removeEventListener('play', eventListenersRef.current.onPlay);
+        }
+        if (eventListenersRef.current.onPause) {
+          audioRef.current.removeEventListener('pause', eventListenersRef.current.onPause);
+        }
+        if (eventListenersRef.current.onEnded) {
+          audioRef.current.removeEventListener('ended', eventListenersRef.current.onEnded);
+        }
+        if (eventListenersRef.current.onError) {
+          audioRef.current.removeEventListener('error', eventListenersRef.current.onError);
+        }
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const handlePlayAudio = () => {
     if (!audioRef.current || !audioUrl) return;

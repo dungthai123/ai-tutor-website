@@ -156,9 +156,12 @@ export default function ProofreadingPage() {
         };
       }
       
-      const savedNote = createNote(result.correction, title, undefined, proofreading);
+      // Always add "writing" tag when saving from proofreader
+      const tags = ['writing'];
+      
+      const savedNote = createNote(result.correction, title, undefined, proofreading, tags);
       if (savedNote) {
-        console.log('[PROOFREAD_PAGE] Note saved successfully:', savedNote.id, 'with title:', title, proofreading ? 'and proofreading data' : '');
+        console.log('[PROOFREAD_PAGE] Note saved successfully:', savedNote.id, 'with title:', title, 'and writing tag');
         return true;
       }
       return false;

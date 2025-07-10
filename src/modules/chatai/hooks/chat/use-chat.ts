@@ -2,17 +2,15 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useChatStore } from '../storage/chat-store';
-import { useChatStorage } from '../storage/use-chat-storage';
 import { chatApiService } from '../../services';
 import { ChatMessage, TopicDetail } from '../../types';
 import { chatUtils, storageUtils } from '../../utils';
 
 export function useChat() {
   const chatStore = useChatStore();
-  const { autoSaveConversation } = useChatStorage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const mainChat = useRef(true);
-
+  
   // Initialize conversation
   const initializeConversation = useCallback(
     async (conversationId: string, topicDetail: TopicDetail) => {
@@ -349,31 +347,6 @@ export function useChat() {
     chatStore.topicDetail?.topicId,
     chatStore.chatSessionId,
   ]);
-
-  // Auto-save conversation after each message using chatSessionId as unique key
-  useEffect(() => {
-    const saveConversation = async () => {
-      if (chatStore.messages.length > 0 && chatStore.chatSessionId && chatStore.topicDetail) {
-        console.log('💾 Auto-saving conversation with', chatStore.messages.length, 'messages using sessionId:', chatStore.chatSessionId);
-        try {
-          // Use chatSessionId as the unique storage key to prevent duplicates
-          await autoSaveConversation(
-            chatStore.chatSessionId, // Use unique session ID instead of conversationId
-            chatStore.messages,
-            chatStore.topicDetail
-          );
-          console.log('✅ Conversation auto-saved successfully with key:', chatStore.chatSessionId);
-        } catch (error) {
-          console.error('❌ Failed to auto-save conversation:', error);
-        }
-      }
-    };
-
-    // Debounce the save operation to avoid excessive saves
-    const timeoutId = setTimeout(saveConversation, 1000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [chatStore.messages.length, chatStore.chatSessionId, chatStore.topicDetail, autoSaveConversation]);
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {

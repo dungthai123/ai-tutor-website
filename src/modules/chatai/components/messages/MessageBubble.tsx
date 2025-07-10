@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Languages, Volume2, Play, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../../types';
@@ -9,8 +9,10 @@ import { useTextToSpeech } from '../../hooks/audio/use-text-to-speech';
 import { useTranslation } from '../../hooks/api/use-translation';
 import { useChatStore } from '../../hooks/storage/chat-store';
 import { useSettingsStore } from '../../hooks/storage/settings-store';
+import { useAudioStore } from '../../hooks/storage/audio-store';
 import { cn } from '../../utils';
 import { useChat } from '../../hooks/chat/use-chat';
+import { TextSegmentWrapper } from '@/modules/text-segment/components/TextSegmentWrapper';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -23,11 +25,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   className,
   showActions = true,
 }) => {
-  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
-  
   const { playTTS, stopTTS } = useTextToSpeech();
   const { translateText, isTranslating } = useTranslation();
   const { selectedFontSize, isSeparateWordOn } = useSettingsStore();
+  const { isTTSPlaying, currentTTSMessageId } = useAudioStore();
   const {
     showTranslatedText,
     showImprovedText,
@@ -39,20 +40,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   } = useChatStore();
   const { improveMessage } = useChat();
 
+  // Check if this specific message is currently playing TTS
+  const isThisMessagePlayingTTS = isTTSPlaying && currentTTSMessageId === message.id;
+
   const handlePlayTTS = async () => {
-    if (isPlayingTTS) {
+    if (isThisMessagePlayingTTS) {
       await stopTTS();
-      setIsPlayingTTS(false);
       return;
     }
 
     try {
-      setIsPlayingTTS(true);
-      await playTTS(message.content.original);
+      await playTTS(message.content.original, 1.0, message.id);
     } catch (error) {
       console.error('Failed to play TTS:', error);
-    } finally {
-      setIsPlayingTTS(false);
     }
   };
 
@@ -100,21 +100,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   const renderSegmentedText = () => {
-    if (!isSeparateWordOn || !message.content.segments || message.content.segments.length === 0) {
+    if (!isSeparateWordOn) {
       return <span>{message.content.original}</span>;
     }
 
     return (
-      <span>
-        {message.content.segments.map((segment, index) => (
-          <span
-            key={index}
-            className="inline-block mr-1 px-1 py-0.5 rounded bg-blue-100 text-blue-800"
-          >
-            {segment.word}
-          </span>
-        ))}
-      </span>
+      <TextSegmentWrapper
+        text={message.content.original}
+        showPinyin={true}
+        className="flex flex-wrap gap-1"
+      />
     );
   };
 
@@ -179,7 +174,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {/* TTS Button */}
                 <button
                   onClick={handlePlayTTS}
-                  disabled={isPlayingTTS}
+                  disabled={isThisMessagePlayingTTS}
                   className={cn(
                     'p-1 rounded-full transition-colors',
                     message.isUserMessage
@@ -188,7 +183,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   )}
                   title="Play audio"
                 >
-                  {isPlayingTTS ? (
+                  {isThisMessagePlayingTTS ? (
                     <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   ) : (
                     <Volume2 className="h-3 w-3" />

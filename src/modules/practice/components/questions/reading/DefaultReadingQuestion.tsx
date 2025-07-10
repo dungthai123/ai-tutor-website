@@ -160,12 +160,23 @@ export function DefaultReadingQuestion({ quizModel, isShowTranslation, fontClass
           style={{ '--slide-distance': '20px' } as React.CSSProperties}
         >
           <h4 className="font-semibold text-teal-1000 mb-2">❓ Question:</h4>
+          <div className={`prose prose-sm max-w-none ${fontClasses?.questionText || 'text-base'}`}>
+        
+          {isTextSegmentEnabled ? (
+            <TextSegmentWrapper 
+              text={quizModel.question}
+              showPinyin={true}
+              className="mb-2"
+            />
+          ) : (
           <TextAndTranslate 
             text={quizModel.question} 
             translation={quizModel.readingTranslation}
             isShowTranslation={isShowTranslation}
             fontClasses={fontClasses}
           />
+          )}
+          </div>
         </div>
       )}
         

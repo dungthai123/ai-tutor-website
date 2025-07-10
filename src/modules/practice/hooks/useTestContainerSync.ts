@@ -87,16 +87,17 @@ export function useTestContainerSync({
     }
   }, [navigationCurrentIndex, state.currentPosition, actions]);
 
-  // Sync answers between stores
+  // Sync answers between stores - sync ALL answers, not just current position
   useEffect(() => {
-    const ans = state.selectedAnswers[state.currentPosition];
-    if (ans !== undefined) {
-      const ansNumber = typeof ans === 'string' ? parseInt(ans, 10) : ans;
-      if (!isNaN(ansNumber)) {
-        setNavigationAnswer(state.currentPosition, ansNumber);
+    // Sync all answers from practiceDetailStore to testNavigationStore
+    Object.entries(state.selectedAnswers).forEach(([questionIndex, answer]) => {
+      const index = parseInt(questionIndex, 10);
+      const ansNumber = typeof answer === 'string' ? parseInt(answer, 10) : answer;
+      if (!isNaN(ansNumber) && !isNaN(index)) {
+        setNavigationAnswer(index, ansNumber);
       }
-    }
-  }, [state.selectedAnswers, state.currentPosition, setNavigationAnswer]);
+    });
+  }, [state.selectedAnswers, setNavigationAnswer]);
 
   // Event handlers
   const handleQuestionChange = (questionIndex: number) => {

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FloatingChatButton, ChatWindow } from "@/modules/chatbot";
+import { FloatingAddNoteButton } from "@/shared/components/ui/FloatingAddNoteButton";
+import { GlobalNotesPanel } from "@/modules/notes/components/GlobalNotesPanel";
+import { ClientOnly } from "@/shared/components/common/ClientOnly";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +31,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <div className="flex h-screen overflow-hidden">
+          {/* Main content area */}
+          <div className="flex-1 overflow-hidden">
+            {children}
+          </div>
+          
+          {/* Right side notes panel */}
+          <ClientOnly>
+            <GlobalNotesPanel />
+          </ClientOnly>
+        </div>
+        
         <ChatWindow />
         <FloatingChatButton />
+        <ClientOnly>
+          <FloatingAddNoteButton />
+        </ClientOnly>
       </body>
     </html>
   );

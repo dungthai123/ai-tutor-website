@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { ReadingQuestionProps } from './types';
 import { TextAndTranslate } from '../../shared/TextAndTranslate';
+import { TextSegmentWrapper } from '@/modules/text-segment';
 import { AspectRatioImage } from '../../shared/AspectRatioImage';
 
-export function OrderingQuestion({ quizModel, isShowTranslation, fontClasses }: ReadingQuestionProps) {
+export function OrderingQuestion({ quizModel, isShowTranslation, fontClasses, isTextSegmentEnabled }: ReadingQuestionProps) {
   // Helper to check if passage is valid and not empty
   const hasValidPassage = quizModel.passage && quizModel.passage.trim() !== '' && quizModel.passage !== quizModel.question;
 
@@ -75,24 +76,40 @@ export function OrderingQuestion({ quizModel, isShowTranslation, fontClasses }: 
       {hasValidPassage && (
         <div className="passage mb-6 p-4 bg-gray-50 rounded-lg">
           <h5 className="font-medium text-gray-700 mb-3">Context Passage:</h5>
-          <TextAndTranslate 
-            text={quizModel.passage!} 
-            translation={quizModel.readingTranslationContext}
-            isShowTranslation={isShowTranslation}
-            fontClasses={fontClasses}
-          />
+          {isTextSegmentEnabled ? (
+            <TextSegmentWrapper 
+              text={quizModel.passage!}
+              showPinyin={true}
+              className="mb-4"
+            />
+          ) : (
+            <TextAndTranslate 
+              text={quizModel.passage!} 
+              translation={quizModel.readingTranslationContext}
+              isShowTranslation={isShowTranslation}
+              fontClasses={fontClasses}
+            />
+          )}
         </div>
       )}
 
       {quizModel.question && (
         <div className="question-text p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
           <h4 className="font-semibold text-indigo-800 mb-2">🎯 Task:</h4>
-          <TextAndTranslate 
-            text={quizModel.question} 
-            translation={quizModel.readingTranslation}
-            isShowTranslation={isShowTranslation}
-            fontClasses={fontClasses}
-          />
+          {isTextSegmentEnabled ? (
+            <TextSegmentWrapper 
+              text={quizModel.question}
+              showPinyin={true}
+              className="mb-2"
+            />
+          ) : (
+            <TextAndTranslate 
+              text={quizModel.question} 
+              translation={quizModel.readingTranslation}
+              isShowTranslation={isShowTranslation}
+              fontClasses={fontClasses}
+            />
+          )}
         </div>
       )}
 

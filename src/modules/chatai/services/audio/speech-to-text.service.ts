@@ -9,6 +9,18 @@ class SpeechToTextService {
     this.baseUrl = 'https://api.openai.com/v1';
   }
 
+  // Helper method to get appropriate file extension based on MIME type
+  private getFileExtension(mimeType: string): string {
+    if (mimeType.includes('mp4')) return 'm4a';
+    if (mimeType.includes('webm')) return 'webm';
+    if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('ogg')) return 'oga';
+    if (mimeType.includes('mp3')) return 'mp3';
+    if (mimeType.includes('flac')) return 'flac';
+    // Default fallback
+    return 'webm';
+  }
+
   async transcribeAudio(
     audioBlob: Blob,
     language?: string
@@ -16,7 +28,18 @@ class SpeechToTextService {
     try {
       // Use Next.js API route for transcription
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.m4a');
+      
+      // Get the appropriate file extension based on the blob's type
+      const fileExtension = this.getFileExtension(audioBlob.type);
+      const fileName = `recording.${fileExtension}`;
+      
+      console.log('🎤 Processing audio:', { 
+        type: audioBlob.type, 
+        size: audioBlob.size, 
+        fileName 
+      });
+      
+      formData.append('audio', audioBlob, fileName);
       
       if (language) {
         formData.append('language', language);
@@ -52,8 +75,12 @@ class SpeechToTextService {
     audioBlob: Blob,
     language?: string
   ): Promise<ApiResponse<string>> {
+    // Get the appropriate file extension based on the blob's type
+    const fileExtension = this.getFileExtension(audioBlob.type);
+    const fileName = `recording.${fileExtension}`;
+    
     const formData = new FormData();
-    formData.append('file', audioBlob, 'recording.m4a');
+    formData.append('file', audioBlob, fileName);
     formData.append('model', 'whisper-1');
     formData.append('response_format', 'json');
 

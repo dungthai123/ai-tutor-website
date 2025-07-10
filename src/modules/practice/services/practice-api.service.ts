@@ -55,6 +55,7 @@ interface ApiQuizQuestion {
     img_link?: string | null;
   }>;
   answer: string;
+  explanation?: string;
   audio_context?: string | null;
   transcript?: string;
   transcript_context?: string | null;
@@ -62,8 +63,10 @@ interface ApiQuizQuestion {
   type_of_question: string;
   type_of_answer: string;
   localized_content?: {
-    transcript?: string;
-    explanation?: string | null;
+    transcript?: string | null;
+    explanation?: string;
+    transcript_context?: string | null;
+    context?: string;
   };
   regions?: Record<string, {
     reading_translation?: string;
@@ -275,10 +278,16 @@ export class PracticeApiService {
       correctAnswer: rawData.answer,
       optionList: rawData.option_list.map(this.transformOptionModel),
       typeAnswer: this.mapAnswerType(rawData.type_of_answer),
-      explanation: rawData.localized_content?.explanation || undefined,
+      explanation: rawData.explanation || rawData.localized_content?.explanation || undefined,
       readingTranslation: undefined, // Not available in current API
       correctAnswerTranslation: undefined, // Not available in current API
       optionListText: undefined, // Not available in current API
+      localizedContent: rawData.localized_content ? {
+        transcript: rawData.localized_content.transcript,
+        explanation: rawData.localized_content.explanation,
+        transcript_context: rawData.localized_content.transcript_context,
+        context: rawData.localized_content.context
+      } : undefined,
       type: PracticeType.LISTENING,
       audio: rawData.audio_url || '',
       audioContext: rawData.audio_context || undefined,
@@ -331,10 +340,16 @@ export class PracticeApiService {
       correctAnswer: rawData.answer,
       optionList: rawData.option_list.map(this.transformOptionModel),
       typeAnswer: this.mapAnswerType(rawData.type_of_answer),
-      explanation: regionData.explanation || rawData.localized_content?.explanation || undefined,
+      explanation: rawData.explanation || regionData.explanation || rawData.localized_content?.explanation || undefined,
       readingTranslation: regionData.reading_translation || undefined,
       correctAnswerTranslation: undefined, // Not available in current API
       optionListText: undefined, // Not available in current API
+      localizedContent: rawData.localized_content ? {
+        transcript: rawData.localized_content.transcript,
+        explanation: rawData.localized_content.explanation,
+        transcript_context: rawData.localized_content.transcript_context,
+        context: rawData.localized_content.context
+      } : undefined,
       type: PracticeType.READING,
       passage: passage,
       questionType: this.detectReadingQuestionType(rawData),
@@ -453,6 +468,7 @@ export class PracticeApiService {
     if (rawData.type_of_question) {
       const typeMap: Record<string, WritingQuestionType> = {
         'Write_Ordering': WritingQuestionType.WRITE_ORDERING,
+        'Write_Hanzi': WritingQuestionType.WRITE_HANZI,
         'Write_SentencefromImage': WritingQuestionType.WRITE_SENTENCE_FROM_IMAGE,
         'Write_Completion': WritingQuestionType.WRITE_COMPLETION,
         'Write_Essay': WritingQuestionType.WRITE_ESSAY,

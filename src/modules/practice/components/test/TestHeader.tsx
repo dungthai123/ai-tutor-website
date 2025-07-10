@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 
 export function TestHeader() {
-  const { fontSize, setFontSize, isTextSegmentEnabled, toggleTextSegment } = usePracticeDetailStore();
+  const { fontSize, setFontSize, isTextSegmentEnabled, toggleTextSegment, showAnswerAfterEach, toggleShowAnswer, isShowExplanationContent, toggleExplanationContent } = usePracticeDetailStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -69,6 +69,30 @@ export function TestHeader() {
           >
             <span>🀄</span>
             <span>{isTextSegmentEnabled ? 'Hide Pinyin' : 'Show Pinyin'}</span>
+          </Button>
+          <Button
+            variant={showAnswerAfterEach ? "primary" : "secondary"}
+            onClick={toggleShowAnswer}
+            className={`text-xs px-3 py-1 flex items-center gap-1 ${
+              showAnswerAfterEach 
+                ? 'bg-green-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>✅</span>
+            <span>{showAnswerAfterEach ? 'Hide Answer' : 'Show Answer'}</span>
+          </Button>
+          <Button
+            variant={isShowExplanationContent ? "primary" : "secondary"}
+            onClick={toggleExplanationContent}
+            className={`text-xs px-3 py-1 flex items-center gap-1 ${
+              isShowExplanationContent 
+                ? 'bg-orange-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>📖</span>
+            <span>{isShowExplanationContent ? 'Hide Explanation' : 'Show Explanation'}</span>
           </Button>
           <Button
             variant={isFullscreen ? "primary" : "secondary"}

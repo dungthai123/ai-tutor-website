@@ -41,14 +41,14 @@ export class NotesService {
   /**
    * Create a new note
    */
-  static createNote(content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData): Note {
+  static createNote(content: string, title?: string, style?: NoteStyle, proofreading?: ProofreadingData, tags?: string[]): Note {
     const now = new Date().toISOString();
     
     // Auto-generate title from first line if not provided
     const autoTitle = title || NotesService.generateTitleFromContent(content);
     
-    // Use random style if not provided
-    const noteStyle = style || NotesService.getRandomStyle();
+    // Use provided style or default white style
+    const noteStyle = style || NOTE_STYLES;
 
     const newNote: Note = {
       id: NotesService.generateId(),
@@ -58,7 +58,8 @@ export class NotesService {
       updatedAt: now,
       style: noteStyle,
       source: proofreading ? 'proofreader' : 'manual',
-      proofreading
+      proofreading,
+      tags: tags || []
     };
 
     const notes = NotesService.getAllNotes();
@@ -140,12 +141,10 @@ export class NotesService {
   }
 
   /**
-   * Get a random style for new notes
+   * Get the default style for new notes
    */
-  static getRandomStyle(): NoteStyle {
-    const styleKeys = Object.keys(NOTE_STYLES);
-    const randomKey = styleKeys[Math.floor(Math.random() * styleKeys.length)];
-    return NOTE_STYLES[randomKey];
+  static getDefaultStyle(): NoteStyle {
+    return NOTE_STYLES;
   }
 
   /**

@@ -157,7 +157,9 @@ export class ChatApiService extends BaseApiService {
       {
         chat_session_id: request.chatSessionId,
         message: request.message,
-        isSegment: true,
+        conversation_id: request.conversationId,
+        topic_id: request.topicId,
+        is_segment: false,
       }
     );
   }

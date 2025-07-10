@@ -119,6 +119,8 @@ export function NewChatInput() {
           }
         } catch (error) {
           console.error('Failed to transcribe and send audio:', error);
+          // Clear recording on error to reset states
+          clearRecording();
         }
       };
       

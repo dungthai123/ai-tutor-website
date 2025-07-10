@@ -6,12 +6,27 @@ class PronunciationService extends BaseApiService {
     super(process.env.NEXT_PUBLIC_API_BASE_URL || 'https://trumchinese-staging.hackinglanguage.com');
   }
 
+  // Helper method to get appropriate file extension based on MIME type
+  private getFileExtension(mimeType: string): string {
+    if (mimeType.includes('mp4')) return 'm4a';
+    if (mimeType.includes('webm')) return 'webm';
+    if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('ogg')) return 'oga';
+    if (mimeType.includes('mp3')) return 'mp3';
+    if (mimeType.includes('flac')) return 'flac';
+    // Default fallback
+    return 'm4a';
+  }
+
   async assessPronunciation(
     audioBlob: Blob,
     referenceText: string
   ): Promise<ApiResponse<SpeechData>> {
+    const fileExtension = this.getFileExtension(audioBlob.type);
+    const fileName = `recording_${Date.now()}.${fileExtension}`;
+    
     const formData = new FormData();
-    formData.append('file', audioBlob, `recording_${Date.now()}.m4a`);
+    formData.append('file', audioBlob, fileName);
     formData.append('referenceText', referenceText);
 
     try {
